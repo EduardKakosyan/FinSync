@@ -1,0 +1,169 @@
+# SwiftLint Configuration for FinSync
+
+# Paths to include/exclude
+included:
+  - FinSync
+  - FinSyncTests
+  - FinSyncUITests
+
+excluded:
+  - Carthage
+  - Pods
+  - DerivedData
+  - .build
+
+# Rules Configuration
+disabled_rules:
+  - trailing_whitespace # Handled by Xcode
+  - todo # We want to track TODOs via comments
+
+opt_in_rules:
+  - array_init
+  - attributes
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - empty_count
+  - empty_string
+  - enum_case_associated_values_count
+  - fatal_error_message
+  - file_header
+  - file_name
+  - first_where
+  - force_unwrapping
+  - implicit_return
+  - joined_default_parameter
+  - let_var_whitespace
+  - literal_expression_end_indentation
+  - modifier_order
+  - multiline_arguments
+  - multiline_function_chains
+  - multiline_literal_brackets
+  - multiline_parameters
+  - multiline_parameters_brackets
+  - operator_usage_whitespace
+  - optional_enum_case_matching
+  - overridden_super_call
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - single_test_class
+  - sorted_first_last
+  - sorted_imports
+  - switch_case_alignment
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - unused_import
+  - vertical_parameter_alignment_on_call
+  - vertical_whitespace_closing_braces
+  - vertical_whitespace_opening_braces
+  - yoda_condition
+
+# Rule Customization
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+
+file_length:
+  warning: 400
+  error: 500
+
+function_body_length:
+  warning: 50
+  error: 80
+
+type_body_length:
+  warning: 300
+  error: 400
+
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+
+nesting:
+  type_level:
+    warning: 2
+  statement_level:
+    warning: 5
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - ui
+    - vm
+
+type_name:
+  min_length:
+    warning: 3
+    error: 2
+  max_length:
+    warning: 50
+    error: 60
+
+force_unwrapping:
+  severity: error
+
+force_cast:
+  severity: error
+
+# Custom Rules
+custom_rules:
+  # Ensure ViewModels are marked with @MainActor
+  viewmodel_main_actor:
+    name: "ViewModel MainActor"
+    regex: 'class\s+\w*ViewModel.*:\s*ObservableObject'
+    not_regex: '@MainActor\s*\n.*class\s+\w*ViewModel.*:\s*ObservableObject'
+    message: "ViewModels should be marked with @MainActor"
+    severity: warning
+    
+  # Prefer @Published over @State in ViewModels
+  viewmodel_published:
+    name: "ViewModel Published Properties"
+    regex: '@State.*var.*=.*'
+    match_kinds:
+      - comment
+      - identifier
+    message: "Use @Published instead of @State in ViewModels"
+    severity: warning
+    
+  # Ensure proper error handling
+  force_try_without_context:
+    name: "Force Try Context"
+    regex: 'try!\s+(?!.*//.*context)'
+    message: "Force try should include a comment explaining why it's safe"
+    severity: warning
+    
+  # Ensure proper logging instead of print
+  print_usage:
+    name: "Print Usage"
+    regex: 'print\('
+    message: "Use proper logging instead of print statements"
+    severity: warning
+
+# File Header Template
+file_header:
+  required_pattern: |
+                    \/\/
+                    \/\/  .*\.swift
+                    \/\/  FinSync
+                    \/\/
+                    \/\/  Created by .* on \d{1,2}\/\d{1,2}\/\d{2,4}\.
+                    \/\/
+
+# Analyzer Rules
+analyzer_rules:
+  - explicit_self
+  - unused_import
+  - unused_declaration
