@@ -1,0 +1,98 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-checks:
+    name: PR Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Validate PR title
+      uses: amannn/action-semantic-pull-request@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        types: |
+          feat
+          fix
+          docs
+          style
+          refactor
+          test
+          chore
+        scopes: |
+          home
+          receipts
+          charts
+          analytics
+          core
+          tests
+          ci
+          
+    - name: Check PR size
+      uses: noqcks/xarrays@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        max_lines_changed: 500
+        
+    - name: Require tests for new features
+      uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          src:
+            - 'FinSync/**/*.swift'
+          tests:
+            - 'FinSyncTests/**/*.swift'
+            - 'FinSyncUITests/**/*.swift'
+            
+    - name: Comment if tests missing
+      if: steps.changes.outputs.src == 'true' && steps.changes.outputs.tests == 'false'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '⚠️ **Missing Tests**: This PR modifies source code but doesn\'t include corresponding test changes. Please add appropriate unit or UI tests.'
+          })
+          
+  danger:
+    name: Danger Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        bundler-cache: true
+        
+    - name: Install Danger
+      run: gem install danger
+      
+    - name: Run Danger
+      run: danger
+      env:
+        DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-assign-reviewers:
+    name: Auto-assign Reviewers  
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    
+    steps:
+    - name: Auto-assign reviewer
+      uses: kentaro-m/auto-assign-action@v1.2.5
+      with:
+        configuration-path: '.github/auto-assign.yml'

@@ -1,0 +1,164 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+
+jobs:
+  test:
+    name: Test and Build
+    runs-on: macos-14
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.2'
+        
+    - name: Cache Xcode build
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+          ~/.xcodebuild
+        key: ${{ runner.os }}-xcode-${{ hashFiles('**/*.xcodeproj') }}
+        restore-keys: |
+          ${{ runner.os }}-xcode-
+          
+    - name: Install SwiftLint
+      run: |
+        brew install swiftlint
+        
+    - name: Run SwiftLint
+      run: |
+        swiftlint --reporter github-actions-logging
+        
+    - name: Build for iOS
+      run: |
+        xcodebuild -project FinSync.xcodeproj \
+          -scheme FinSync-iOS \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+          -derivedDataPath DerivedData \
+          clean build
+          
+    - name: Build for macOS
+      run: |
+        xcodebuild -project FinSync.xcodeproj \
+          -scheme FinSync-macOS \
+          -destination 'platform=macOS' \
+          -derivedDataPath DerivedData \
+          clean build
+          
+    - name: Run Unit Tests iOS
+      run: |
+        xcodebuild -project FinSync.xcodeproj \
+          -scheme FinSync-iOS \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+          -derivedDataPath DerivedData \
+          -enableCodeCoverage YES \
+          test
+          
+    - name: Run Unit Tests macOS
+      run: |
+        xcodebuild -project FinSync.xcodeproj \
+          -scheme FinSync-macOS \
+          -destination 'platform=macOS' \
+          -derivedDataPath DerivedData \
+          -enableCodeCoverage YES \
+          test
+          
+    - name: Generate Code Coverage Report
+      run: |
+        xcrun xccov view --report --json DerivedData/Logs/Test/*.xcresult > coverage.json
+        
+    - name: Check Code Coverage
+      run: |
+        # Extract coverage percentage and fail if below threshold
+        COVERAGE=$(python3 -c "
+        import json
+        with open('coverage-summary.json', 'r') as f:
+            data = json.load(f)
+            coverage = data['data'][0]['files'][0]['summary']['lines']['percent']
+            print(f'{coverage:.1f}')
+        ")
+        echo "Code coverage: $COVERAGE%"
+        if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+          echo "❌ Code coverage $COVERAGE% is below required 80%"
+          exit 1
+        fi
+        echo "✅ Code coverage $COVERAGE% meets requirement"
+        
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.json
+        fail_ci_if_error: true
+        
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-14
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.2'
+        
+    - name: Run UI Tests iOS
+      run: |
+        xcodebuild -project FinSync.xcodeproj \
+          -scheme FinSync-iOS \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+          -derivedDataPath DerivedData \
+          test -testPlan UITests
+          
+    - name: Upload UI Test Results
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: ui-test-results
+        path: DerivedData/Logs/Test/
+        
+  security-scan:
+    name: Security Scan
+    runs-on: macos-14
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security scan with Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/swift
+          
+  commit-validation:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Validate commit messages
+      uses: wagoid/commitlint-github-action@v5
+      with:
+        configFile: '.commitlintrc.json'

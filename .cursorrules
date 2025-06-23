@@ -1,0 +1,241 @@
+# FinSync - Cursor AI Development Rules
+
+## Project Context
+You are working on FinSync, a personal financial tracking app for iOS/macOS built with SwiftUI. This is a single-user application focused on semi-automatic financial management.
+
+## MANDATORY: CODE-SIM Development Workflow
+
+### CRITICAL: You MUST follow this exact 6-phase cycle for EVERY feature:
+
+#### 1. PLAN Phase
+- Analyze requirements and break down into specific tasks
+- Define data models, view hierarchy, and user interactions
+- Identify dependencies and mock data requirements
+- Document expected behavior and edge cases
+- **ALWAYS NOTIFY USER**: "✅ PLAN phase completed for [Feature Name]"
+
+#### 2. SIMULATE Phase
+- Walk through complete user journey step-by-step
+- Identify potential failure points and error states
+- Design view transitions and state management
+- Validate approach against SwiftUI best practices
+- **ALWAYS NOTIFY USER**: "✅ SIMULATE phase completed for [Feature Name]"
+
+#### 3. TEST Phase
+- Write failing unit tests for ViewModels (90%+ coverage required)
+- Write failing UI tests for view behavior
+- Include comprehensive edge cases and error scenarios
+- Add snapshot tests for visual consistency
+- **ALWAYS NOTIFY USER**: "✅ TEST phase completed - [X] tests written for [Feature Name]"
+
+#### 4. CODE Phase
+- Implement MINIMUM code to pass tests
+- Follow SwiftUI and iOS design guidelines strictly
+- Use proper MVVM architecture with @MainActor ViewModels
+- Implement comprehensive error handling
+- **ALWAYS NOTIFY USER**: "✅ CODE phase completed for [Feature Name]"
+
+#### 5. VERIFY Phase
+- Run all tests and confirm 100% pass rate
+- Verify code coverage meets 80% minimum (90% for ViewModels)
+- Check UI rendering matches requirements
+- Validate accessibility compliance
+- **ALWAYS NOTIFY USER**: "✅ VERIFY phase completed - all tests passing for [Feature Name]"
+
+#### 6. DEBUG Phase
+- Review code for performance issues
+- Optimize memory usage and rendering
+- Ensure proper error handling and user feedback
+- **ALWAYS NOTIFY USER**: "✅ DEBUG phase completed for [Feature Name]"
+
+## Current Feature Implementation Priority
+
+### 1. Home Screen with Spending Data
+- Cyclable time periods (day/week/month)
+- Mock spending data display
+- Clean card-based layout
+
+### 2. Receipt Capture Button
+- Floating action button at bottom
+- Mock photo capture flow
+- Placeholder processing feedback
+
+### 3. Charts and Analytics
+- Spending trend visualization
+- Savings overview charts
+- Swift Charts integration
+
+## SwiftUI Architecture Requirements
+
+### MVVM Pattern (Strictly Enforced)
+```swift
+@MainActor
+final class HomeViewModel: ObservableObject {
+    @Published var spendingData: SpendingData = .mock
+    @Published var selectedPeriod: TimePeriod = .week
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    
+    private let dataService: DataServiceProtocol
+    
+    init(dataService: DataServiceProtocol = MockDataService()) {
+        self.dataService = dataService
+    }
+}
+```
+
+### View Structure
+```swift
+struct HomeView: View {
+    @StateObject private var viewModel = HomeViewModel()
+    
+    var body: some View {
+        NavigationStack {
+            // Implementation
+        }
+        .onAppear {
+            viewModel.loadData()
+        }
+    }
+}
+```
+
+## Testing Requirements
+
+### Unit Tests (90% coverage for ViewModels)
+```swift
+@MainActor
+final class HomeViewModelTests: XCTestCase {
+    private var sut: HomeViewModel!
+    private var mockDataService: MockDataService!
+    
+    override func setUp() {
+        super.setUp()
+        mockDataService = MockDataService()
+        sut = HomeViewModel(dataService: mockDataService)
+    }
+    
+    func test_initialState_hasCorrectDefaults() {
+        XCTAssertEqual(sut.selectedPeriod, .week)
+        XCTAssertFalse(sut.isLoading)
+        XCTAssertNil(sut.errorMessage)
+    }
+}
+```
+
+### UI Tests
+```swift
+final class HomeViewUITests: XCTestCase {
+    private var app: XCUIApplication!
+    
+    override func setUp() {
+        super.setUp()
+        app = XCUIApplication()
+        app.launch()
+    }
+    
+    func test_homeView_displaysSpendingCards() {
+        let spendingCard = app.staticTexts["spending-card"]
+        XCTAssertTrue(spendingCard.exists)
+    }
+}
+```
+
+## Code Quality Standards
+
+### NEVER
+- Skip any phase of the CODE-SIM workflow
+- Write code without corresponding tests
+- Use @State in ViewModels (use @Published)
+- Force unwrap without error handling
+- Use print() statements (use proper logging)
+- Commit directly to main branch
+
+### ALWAYS
+- Mark ViewModels with @MainActor
+- Use dependency injection for services
+- Include accessibility identifiers
+- Handle all error states gracefully
+- Follow conventional commit format
+- Maintain 80%+ test coverage
+
+## Mock Data Strategy
+
+### Realistic Test Data
+```swift
+extension SpendingData {
+    static let mock = SpendingData(
+        dailySpending: 45.67,
+        weeklySpending: 234.50,
+        monthlySpending: 1250.00,
+        categories: [
+            .init(name: "Food", amount: 156.78, color: .green),
+            .init(name: "Transport", amount: 89.22, color: .blue),
+            .init(name: "Shopping", amount: 234.50, color: .orange)
+        ]
+    )
+}
+```
+
+## Commit Format (Strictly Enforced)
+```
+type(scope): description
+
+Examples:
+feat(home): add spending data display with time period selector
+fix(charts): resolve chart rendering issue on iPad
+test(home): add comprehensive unit tests for HomeViewModel
+```
+
+## Error Handling Pattern
+```swift
+enum AppError: LocalizedError {
+    case dataLoadingFailed
+    case invalidInput(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .dataLoadingFailed:
+            return "Failed to load data"
+        case .invalidInput(let input):
+            return "Invalid input: \(input)"
+        }
+    }
+}
+```
+
+## Performance Requirements
+- App launch time: < 2 seconds
+- View transitions: 60fps smooth animations
+- Memory usage: < 100MB for normal operation
+- Test suite: < 30 seconds execution time
+
+## Accessibility Requirements
+- All interactive elements have accessibility identifiers
+- VoiceOver support for all user flows
+- Dynamic Type support for text scaling
+- High contrast mode compatibility
+
+## Development Workflow
+1. Create feature branch from main
+2. Follow CODE-SIM workflow for each feature
+3. Ensure all tests pass and coverage > 80%
+4. Create PR with detailed description
+5. Wait for CI/CD pipeline approval
+6. Merge only after review approval
+
+## Phase Completion Notification Format
+Use this EXACT format:
+```
+✅ [PHASE] phase completed for [Feature Name]
+- [Key accomplishments]
+- [Metrics/counts where applicable]
+- Ready to proceed to [Next Phase]
+```
+
+## Remember
+- You are building a financial app - security and data integrity are paramount
+- Every feature must be thoroughly tested before implementation
+- User experience should be smooth and intuitive
+- Follow Apple's Human Interface Guidelines
+- Code should be maintainable and well-documented
