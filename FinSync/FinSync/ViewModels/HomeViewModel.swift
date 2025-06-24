@@ -24,14 +24,36 @@ final class HomeViewModel: ObservableObject {
     }
     
     private func setupBindings() {
-        // This will be implemented in the CODE phase
+        // Auto-load data when period changes
+        $selectedPeriod
+            .removeDuplicates()
+            .dropFirst() // Skip initial value to avoid double loading
+            .sink { [weak self] period in
+                Task { @MainActor in
+                    await self?.loadSpendingData()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func updatePeriod(_ period: TimePeriod) async {
-        // This will be implemented in the CODE phase
+        guard selectedPeriod != period else { return }
+        
+        selectedPeriod = period
+        await loadSpendingData()
     }
     
     private func loadSpendingData() async {
-        // This will be implemented in the CODE phase
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let data = try await dataService.fetchSpendingData(for: selectedPeriod)
+            spendingData = data
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isLoading = false
     }
 }

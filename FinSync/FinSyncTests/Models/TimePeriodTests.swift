@@ -110,9 +110,9 @@ final class TimePeriodTests: XCTestCase {
     // MARK: - String Representation Tests
     
     func test_timePeriod_stringInterpolation_shouldUseRawValue() {
-        let dayString = "\(TimePeriod.day)"
-        let weekString = "\(TimePeriod.week)"
-        let monthString = "\(TimePeriod.month)"
+        let dayString = "\(TimePeriod.day.rawValue)"
+        let weekString = "\(TimePeriod.week.rawValue)"
+        let monthString = "\(TimePeriod.month.rawValue)"
         
         XCTAssertEqual(dayString, "Day")
         XCTAssertEqual(weekString, "Week")

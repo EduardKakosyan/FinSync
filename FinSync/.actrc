@@ -1,0 +1,8 @@
+# act configuration for local GitHub Actions simulation
+# Skip macOS jobs when using Linux containers
+--env ACT=true
+--container-architecture linux/amd64
+
+# Use Ubuntu for jobs that can run on Linux
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P macos-14=catthehacker/ubuntu:act-latest

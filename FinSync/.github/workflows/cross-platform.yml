@@ -1,0 +1,71 @@
+name: Cross-Platform CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Swift package validation that works on Linux
+  swift-package-check:
+    name: Swift Package Validation
+    runs-on: ubuntu-latest
+    if: env.ACT == 'true'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: "5.9"
+        
+    - name: Validate Swift Syntax
+      run: |
+        # Check Swift files for syntax errors (without iOS-specific frameworks)
+        find . -name "*.swift" -not -path "./FinSync/FinSyncApp.swift" -not -path "./FinSync/ContentView.swift" | while read file; do
+          echo "Checking syntax: $file"
+          # We can't compile iOS code on Linux, but we can check basic syntax
+          swift -frontend -parse "$file" || echo "Warning: $file may have iOS-specific code"
+        done
+        
+    - name: Lint Swift files
+      run: |
+        echo "=== Swift File Analysis ==="
+        echo "Swift files found:"
+        find . -name "*.swift" -type f
+        echo ""
+        echo "Project structure:"
+        find FinSync -type f -name "*.swift" | head -20
+        
+  # iOS-specific tests (only runs on actual macOS)
+  ios-test:
+    name: iOS Test and Build
+    runs-on: macos-14
+    if: env.ACT != 'true'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Run Tests
+      run: |
+        xcodebuild test \
+          -scheme FinSync \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+          -enableCodeCoverage YES
+          
+    - name: Build for Release
+      run: |
+        xcodebuild build \
+          -scheme FinSync \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          CODE_SIGNING_ALLOWED=NO

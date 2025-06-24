@@ -13,6 +13,10 @@ struct SpendingCategory: Identifiable, Equatable {
     let name: String
     let amount: Decimal
     let color: Color
+    
+    static func == (lhs: SpendingCategory, rhs: SpendingCategory) -> Bool {
+        lhs.name == rhs.name && lhs.amount == rhs.amount
+    }
 }
 
 struct SpendingData: Equatable {
@@ -23,9 +27,9 @@ struct SpendingData: Equatable {
     static let mock = SpendingData(
         totalAmount: 234.50,
         categories: [
-            SpendingCategory(name: "Food", amount: 156.78, color: .green),
-            SpendingCategory(name: "Transport", amount: 89.22, color: .blue),
-            SpendingCategory(name: "Shopping", amount: 234.50, color: .orange)
+            SpendingCategory(name: "Food", amount: 120.78, color: .green),
+            SpendingCategory(name: "Transport", amount: 69.22, color: .blue),
+            SpendingCategory(name: "Shopping", amount: 44.50, color: .orange)
         ],
         period: .week
     )
