@@ -6,5 +6,9 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>FinSync needs camera access to capture receipt images for expense tracking.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FinSync needs photo library access to save receipt images for your expense records.</string>
 </dict>
 </plist>
