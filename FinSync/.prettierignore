@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.expo/
+android/
+ios/
+*.log
+*.lock
+package-lock.json
+yarn.lock
+.git/
+.vscode/
+.idea/
