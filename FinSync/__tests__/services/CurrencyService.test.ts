@@ -285,35 +285,35 @@ describe('CurrencyService', () => {
       const result = currencyService.parseUserInput('');
       
       expect(result.isValid).toBe(false);
-      expect(result.errors[0].message).toBe('Amount is required');
+      expect(result.errors[0]).toBe('Amount is required');
     });
 
     it('should reject zero amounts', () => {
       const result = currencyService.parseUserInput('0');
       
       expect(result.isValid).toBe(false);
-      expect(result.errors[0].message).toBe('Amount must be greater than zero');
+      expect(result.errors[0]).toBe('Amount must be greater than zero');
     });
 
     it('should reject negative amounts', () => {
       const result = currencyService.parseUserInput('-100');
       
       expect(result.isValid).toBe(false);
-      expect(result.errors[0].message).toBe('Amount must be greater than zero');
+      expect(result.errors[0]).toBe('Amount must be greater than zero');
     });
 
     it('should reject amounts exceeding maximum', () => {
       const result = currencyService.parseUserInput('2000000');
       
       expect(result.isValid).toBe(false);
-      expect(result.errors[0].message).toBe('Amount cannot exceed $1,000,000');
+      expect(result.errors[0]).toBe('Amount cannot exceed $1,000,000');
     });
 
     it('should reject invalid input', () => {
       const result = currencyService.parseUserInput('abc');
       
       expect(result.isValid).toBe(false);
-      expect(result.errors[0].message).toBe('Please enter a valid amount');
+      expect(result.errors[0]).toBe('Please enter a valid amount');
     });
   });
 
