@@ -269,7 +269,7 @@ export class DataAggregationService {
   ): Promise<ApiResponse<DailySpending[]>> {
     try {
       const dateRange = this.getDateRangeFromFilter(filter);
-      const days = eachDayOfInterval(dateRange);
+      const days = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
       
       const dailyBreakdown: DailySpending[] = days.map(day => {
         const dayTransactions = transactions.filter(t =>
@@ -313,7 +313,7 @@ export class DataAggregationService {
   ): Promise<ApiResponse<WeeklySpending[]>> {
     try {
       const dateRange = this.getDateRangeFromFilter(filter);
-      const weeks = eachWeekOfInterval(dateRange);
+      const weeks = eachWeekOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
       
       const weeklyBreakdown: WeeklySpending[] = [];
 
@@ -528,7 +528,7 @@ export class DataAggregationService {
         return {
           startDate: startOfDay(day),
           endDate: endOfDay(day),
-          period: 'custom',
+          period: 'day',
         };
       case 'week':
         const week = subWeeks(now, offset);
