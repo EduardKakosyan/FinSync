@@ -161,7 +161,7 @@ const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
           <Text style={styles.headerTitle}>Preview Receipt</Text>
           
           <TouchableOpacity style={styles.headerButton} onPress={handleRotate}>
-            <Ionicons name="rotate-outline" size={24} color={COLORS.TEXT_PRIMARY} />
+            <Ionicons name="refresh-outline" size={24} color={COLORS.TEXT_PRIMARY} />
           </TouchableOpacity>
         </View>
 

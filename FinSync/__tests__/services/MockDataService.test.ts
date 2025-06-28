@@ -263,7 +263,7 @@ describe("MockDataService", () => {
       await mockDataService.fetchSpendingData({
         startDate: new Date(),
         endDate: new Date(),
-        period: "day",
+        period: "week",
       });
       const endTime = Date.now();
 
@@ -275,7 +275,7 @@ describe("MockDataService", () => {
         mockDataService.fetchSpendingData({
           startDate: new Date(),
           endDate: new Date(),
-          period: "day",
+          period: "week",
         }),
         mockDataService.fetchRecentTransactions(),
         mockDataService.fetchCategories(),

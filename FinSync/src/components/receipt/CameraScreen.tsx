@@ -11,7 +11,7 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { Camera, CameraType } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
@@ -28,32 +28,35 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
   const navigation = useNavigation();
   const route = useRoute();
-  const cameraRef = useRef<Camera>(null);
+  const cameraRef = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
   
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashMode, setFlashMode] = useState<'off' | 'on' | 'auto'>('auto');
+  const [facing, setFacing] = useState<CameraType>('back');
   const [focusAnimation] = useState(new Animated.Value(0));
   const [guidelineOpacity] = useState(new Animated.Value(0.7));
 
   useEffect(() => {
-    requestPermissions();
+    if (!permission?.granted) {
+      requestPermission();
+    }
     startGuidelineAnimation();
-  }, []);
+  }, [permission]);
 
-  const requestPermissions = async () => {
-    const granted = await cameraService.requestCameraPermissions();
-    setHasPermission(granted);
-    
-    if (!granted) {
-      Alert.alert(
-        'Camera Permission Required',
-        'This app needs camera access to scan receipts. Please enable camera permissions in your device settings.',
-        [
-          { text: 'Cancel', onPress: handleCancel },
-          { text: 'Settings', onPress: () => {/* Open settings */ } },
-        ]
-      );
+  const handlePermissionRequest = async () => {
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert(
+          'Camera Permission Required',
+          'This app needs camera access to scan receipts. Please enable camera permissions in your device settings.',
+          [
+            { text: 'Cancel', onPress: handleCancel },
+            { text: 'Settings', onPress: () => {/* Open settings */ } },
+          ]
+        );
+      }
     }
   };
 
@@ -151,24 +154,25 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
     }
   };
 
-  if (hasPermission === null) {
+
+  if (!permission) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-        <Text style={styles.loadingText}>Requesting camera permission...</Text>
+        <Text style={styles.loadingText}>Loading camera...</Text>
       </View>
     );
   }
 
-  if (hasPermission === false) {
+  if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Ionicons name="camera-off" size={64} color={COLORS.TEXT_SECONDARY} />
+        <Ionicons name="camera-outline" size={64} color={COLORS.TEXT_SECONDARY} />
         <Text style={styles.permissionTitle}>Camera Permission Required</Text>
         <Text style={styles.permissionMessage}>
           Please enable camera access to scan receipts
         </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermissions}>
+        <TouchableOpacity style={styles.permissionButton} onPress={handlePermissionRequest}>
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
       </View>
@@ -179,12 +183,11 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="black" />
       
-      <Camera
+      <CameraView
         ref={cameraRef}
         style={styles.camera}
-        type={CameraType.back}
-        flashMode={flashMode}
-        ratio="16:9"
+        facing={facing}
+        flash={flashMode}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -284,7 +287,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
             </TouchableOpacity>
           </View>
         </View>
-      </Camera>
+      </CameraView>
     </View>
   );
 };
