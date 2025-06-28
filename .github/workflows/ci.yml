@@ -28,11 +28,11 @@ jobs:
       
     - name: Run TypeScript check
       working-directory: ./FinSync
-      run: npm run typecheck || echo "TypeScript errors detected but allowing build to continue"
+      run: npm run typecheck
       
     - name: Run ESLint
       working-directory: ./FinSync
-      run: npm run lint || echo "ESLint errors detected but allowing build to continue"
+      run: npm run lint
       
     - name: Run tests with coverage
       working-directory: ./FinSync

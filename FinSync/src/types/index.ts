@@ -104,6 +104,7 @@ export type RootStackParamList = {
   };
   EditTransaction: {
     transactionId: string;
+    mode?: 'view' | 'edit';
   };
   CategoryDetails: {
     categoryId: string;
@@ -288,7 +289,7 @@ export interface WeeklySpending {
 export interface DateRange {
   startDate: Date;
   endDate: Date;
-  period: 'week' | 'month' | 'quarter' | 'year' | 'custom';
+  period: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 }
 
 export interface FinancialSummary {

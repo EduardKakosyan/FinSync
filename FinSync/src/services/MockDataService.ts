@@ -343,3 +343,6 @@ export class MockDataService {
     return newReceipt;
   }
 }
+
+// Export singleton instance for backward compatibility
+export const mockDataService = MockDataService.getInstance();
