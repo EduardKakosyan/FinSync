@@ -342,6 +342,31 @@ export class MockDataService {
     this.receipts.push(newReceipt);
     return newReceipt;
   }
+
+  // Additional methods for compatibility with enhanced services
+  generateMockTransactions(count = 50): Transaction[] {
+    return this.transactions.slice(0, count);
+  }
+
+  getMockCategories(): Category[] {
+    return this.categories;
+  }
+
+  getMockDataForPeriod(period: DateRange): { 
+    transactions: Transaction[], 
+    categories: Category[], 
+    accounts: Account[] 
+  } {
+    const transactionsInPeriod = this.transactions.filter(
+      (t) => t.date >= period.startDate && t.date <= period.endDate
+    );
+    
+    return {
+      transactions: transactionsInPeriod,
+      categories: this.categories,
+      accounts: this.accounts
+    };
+  }
 }
 
 // Export singleton instance for backward compatibility
