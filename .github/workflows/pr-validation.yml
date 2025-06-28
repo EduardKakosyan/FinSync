@@ -34,6 +34,9 @@ jobs:
           core
           tests
           ci
+          expo
+          deps
+          config
           
     - name: Check PR size
       uses: noqcks/xarrays@v1
@@ -47,10 +50,13 @@ jobs:
       with:
         filters: |
           src:
-            - 'FinSync/**/*.swift'
+            - 'FinSync/src/**/*.{ts,tsx}'
+            - 'FinSync/components/**/*.{ts,tsx}'
+            - 'FinSync/app/**/*.{ts,tsx}'
           tests:
-            - 'FinSyncTests/**/*.swift'
-            - 'FinSyncUITests/**/*.swift'
+            - 'FinSync/__tests__/**/*.{ts,tsx}'
+            - 'FinSync/**/*.test.{ts,tsx}'
+            - 'FinSync/**/*.spec.{ts,tsx}'
             
     - name: Comment if tests missing
       if: steps.changes.outputs.src == 'true' && steps.changes.outputs.tests == 'false'
@@ -61,31 +67,44 @@ jobs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '⚠️ **Missing Tests**: This PR modifies source code but doesn\'t include corresponding test changes. Please add appropriate unit or UI tests.'
+            body: '⚠️ **Missing Tests**: This PR modifies source code but doesn\'t include corresponding test changes. Please add appropriate unit tests.'
           })
           
-  danger:
-    name: Danger Checks
+  code-quality:
+    name: Code Quality Checks
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Ruby
-      uses: ruby/setup-ruby@v1
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        ruby-version: '3.0'
-        bundler-cache: true
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: FinSync/package-lock.json
         
-    - name: Install Danger
-      run: gem install danger
+    - name: Install dependencies
+      working-directory: ./FinSync
+      run: npm ci
       
-    - name: Run Danger
-      run: danger
-      env:
-        DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+    - name: Check TypeScript
+      working-directory: ./FinSync
+      run: npm run typecheck
+      
+    - name: Check ESLint
+      working-directory: ./FinSync
+      run: npm run lint
+      
+    - name: Check formatting
+      working-directory: ./FinSync
+      run: npm run format:check
+      
+    - name: Run tests
+      working-directory: ./FinSync
+      run: npm test -- --passWithNoTests
+      
   auto-assign-reviewers:
     name: Auto-assign Reviewers  
     runs-on: ubuntu-latest
