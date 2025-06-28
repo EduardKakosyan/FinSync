@@ -35,11 +35,38 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="transactions"
+        options={{
+          title: "Transactions",
+          tabBarIcon: ({ color }) => (
+            <Ionicons size={28} name="wallet" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="add-transaction"
+        options={{
+          title: "Add",
+          tabBarIcon: ({ color }) => (
+            <Ionicons size={32} name="add-circle" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          title: "Analytics",
+          tabBarIcon: ({ color }) => (
+            <Ionicons size={28} name="bar-chart" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="explore"
         options={{
-          title: "Explore",
+          title: "Settings",
           tabBarIcon: ({ color }) => (
-            <Ionicons size={28} name="airplane" color={color} />
+            <Ionicons size={28} name="settings" color={color} />
           ),
         }}
       />
