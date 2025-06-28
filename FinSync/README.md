@@ -1,175 +1,50 @@
-# FinSync - Personal Financial Tracking App
+# Welcome to your Expo app 👋
 
-A React Native (Expo) application for personal financial tracking and management, designed for semi-automatic financial management across mobile platforms.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Features
+## Get started
 
-- **Transaction Management**: Add, edit, and categorize income and expenses
-- **Receipt Scanning**: Capture and process receipts with OCR (coming soon)
-- **Investment Tracking**: Monitor your portfolio performance
-- **Analytics & Insights**: Visual spending trends and financial analytics
-- **Smart Reminders**: Intelligent notifications for expense tracking
-- **Cross-Platform**: Built with React Native for iOS and Android
+1. Install dependencies
 
-## Technology Stack
-
-- **Framework**: React Native with Expo
-- **Language**: TypeScript
-- **Navigation**: React Navigation v7
-- **Animations**: React Native Reanimated
-- **Storage**: AsyncStorage
-- **Charts**: React Native Chart Kit
-- **Icons**: Expo Vector Icons
-- **Testing**: Jest, React Native Testing Library
-- **Code Quality**: ESLint, Prettier
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v16 or later)
-- npm or yarn
-- Expo CLI
-- iOS Simulator or Android emulator
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd FinSync
-   ```
-
-2. Install dependencies:
    ```bash
    npm install
    ```
 
-3. Start the development server:
+2. Start the app
+
    ```bash
-   npm start
+   npx expo start
    ```
 
-4. Run on specific platforms:
-   ```bash
-   npm run ios      # iOS simulator
-   npm run android  # Android emulator
-   npm run web      # Web browser
-   ```
+In the output, you'll find options to open the app in a
 
-## Development Scripts
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-- `npm start` - Start the Expo development server
-- `npm run ios` - Run on iOS simulator
-- `npm run android` - Run on Android emulator
-- `npm run web` - Run in web browser
-- `npm test` - Run tests
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Run tests with coverage
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
-- `npm run typecheck` - Run TypeScript type checking
-- `npm run format` - Format code with Prettier
-- `npm run dev` - Run type checking and linting before starting
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Project Structure
+## Get a fresh project
 
-```
-src/
-├── components/        # Reusable UI components
-│   ├── common/       # Common components
-│   ├── transaction/  # Transaction-specific components
-│   ├── receipt/      # Receipt-related components
-│   ├── investment/   # Investment components
-│   └── analytics/    # Analytics components
-├── screens/          # Screen components
-│   ├── home/         # Home screen
-│   ├── transaction/  # Transaction screens
-│   ├── receipt/      # Receipt screens
-│   ├── investment/   # Investment screens
-│   ├── analytics/    # Analytics screens
-│   └── settings/     # Settings screens
-├── services/         # Business logic and API calls
-│   ├── storage/      # Local storage service
-│   ├── camera/       # Camera and image processing
-│   ├── ocr/          # OCR processing
-│   └── sync/         # Data synchronization
-├── navigation/       # Navigation configuration
-├── hooks/            # Custom React hooks
-├── utils/            # Utility functions
-├── store/            # State management
-├── types/            # TypeScript type definitions
-└── constants/        # App constants and configuration
-```
-
-## Core Features Implementation
-
-### Phase 1: Foundation ✅
-- [x] Basic app structure with navigation
-- [x] TypeScript configuration
-- [x] Core data models and types
-- [x] Basic transaction entry screens
-- [x] Development tooling (ESLint, Prettier, Jest)
-
-### Phase 2: Receipt Intelligence (Planned)
-- [ ] Camera integration with Expo Camera
-- [ ] OCR text extraction
-- [ ] Receipt data parsing
-- [ ] Receipt archive and search
-
-### Phase 3: Smart Automation (Planned)
-- [ ] Notification system
-- [ ] Smart reminders
-- [ ] Contextual alerts
-- [ ] User preference management
-
-### Phase 4: Analytics and Insights (Planned)
-- [ ] Data visualization with charts
-- [ ] Spending trend analysis
-- [ ] Budget tracking
-- [ ] Financial health scoring
-
-### Phase 5: Investment Tracking (Planned)
-- [ ] Portfolio management
-- [ ] Performance calculations
-- [ ] Asset allocation visualization
-- [ ] ROI reporting
-
-## Testing
-
-The project uses Jest and React Native Testing Library for testing:
+When you're ready, run:
 
 ```bash
-npm test                 # Run all tests
-npm run test:watch      # Run tests in watch mode
-npm run test:coverage   # Generate coverage report
+npm run reset-project
 ```
 
-## Code Quality
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-- **ESLint**: Enforces code quality and style rules
-- **Prettier**: Automatic code formatting
-- **TypeScript**: Static type checking
-- **Husky**: Git hooks for quality checks (to be added)
+## Learn more
 
-## Contributing
+To learn more about developing your project with Expo, look at the following resources:
 
-1. Follow the existing code style and patterns
-2. Write tests for new features
-3. Run `npm run dev` before committing to ensure code quality
-4. Update documentation as needed
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## License
+## Join the community
 
-Private project for personal use.
+Join our community of developers creating universal apps.
 
-## Architecture Notes
-
-This app follows a modular architecture with:
-- Feature-based organization
-- TypeScript for type safety
-- React Navigation for routing
-- AsyncStorage for local persistence
-- Expo managed workflow for easier development
-
-The app is designed to be privacy-first with local data storage and optional cloud sync capabilities.
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

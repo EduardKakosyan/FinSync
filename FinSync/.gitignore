@@ -36,34 +36,4 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# Testing
-coverage/
-*.lcov
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS generated files
-Thumbs.db
-
-# Logs
-logs
-*.log
-
-# Build artifacts
-build/
-android/app/build/
-ios/build/
-
-# ESLint cache
-.eslintcache
-
-# Package manager locks (using npm)
-yarn.lock
-
-# React Native
-android/
-ios/
+app-example

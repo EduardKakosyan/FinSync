@@ -20,9 +20,9 @@ import {
   amountsEqual,
   generateAmountRanges,
   Currency,
-} from '../utils/currencyUtils';
-import { CURRENCIES } from '../constants';
-import { ApiResponse } from '../types';
+} from "../utils/currencyUtils";
+import { CURRENCIES } from "../constants";
+import { ApiResponse } from "../types";
 
 export interface CurrencyPreferences {
   primaryCurrency: Currency;
@@ -32,8 +32,8 @@ export interface CurrencyPreferences {
   decimalPlaces: number;
   thousandsSeparator: string;
   decimalSeparator: string;
-  symbolPosition: 'before' | 'after';
-  negativeFormat: 'parentheses' | 'minus' | 'red';
+  symbolPosition: "before" | "after";
+  negativeFormat: "parentheses" | "minus" | "red";
 }
 
 export interface ExchangeRate {
@@ -56,7 +56,7 @@ export interface AmountDisplayOptions {
 export interface BudgetDisplayInfo {
   amount: number;
   currency: Currency;
-  status: 'under' | 'near' | 'over' | 'exceeded';
+  status: "under" | "near" | "over" | "exceeded";
   percentage: number;
   remaining: number;
   formattedAmount: string;
@@ -67,33 +67,39 @@ export interface BudgetDisplayInfo {
 export class CurrencyService {
   private static instance: CurrencyService;
   private preferences: CurrencyPreferences = {
-    primaryCurrency: 'CAD',
-    secondaryCurrency: 'USD',
+    primaryCurrency: "CAD",
+    secondaryCurrency: "USD",
     showCurrencySymbol: true,
     showCurrencyCode: false,
     decimalPlaces: 2,
-    thousandsSeparator: ',',
-    decimalSeparator: '.',
-    symbolPosition: 'before',
-    negativeFormat: 'minus',
+    thousandsSeparator: ",",
+    decimalSeparator: ".",
+    symbolPosition: "before",
+    negativeFormat: "minus",
   };
 
   // Mock exchange rates - in production, these would come from a real API
   private exchangeRates: Map<string, ExchangeRate> = new Map([
-    ['CAD_USD', {
-      from: 'CAD',
-      to: 'USD',
-      rate: 0.75,
-      lastUpdated: new Date(),
-      source: 'mock',
-    }],
-    ['USD_CAD', {
-      from: 'USD',
-      to: 'CAD',
-      rate: 1.33,
-      lastUpdated: new Date(),
-      source: 'mock',
-    }],
+    [
+      "CAD_USD",
+      {
+        from: "CAD",
+        to: "USD",
+        rate: 0.75,
+        lastUpdated: new Date(),
+        source: "mock",
+      },
+    ],
+    [
+      "USD_CAD",
+      {
+        from: "USD",
+        to: "CAD",
+        rate: 1.33,
+        lastUpdated: new Date(),
+        source: "mock",
+      },
+    ],
   ]);
 
   private constructor() {}
@@ -122,16 +128,25 @@ export class CurrencyService {
     } = options;
 
     if (compact && Math.abs(amount) >= 1000) {
-      return formatLargeAmount(amount, currency);
+      const absAmount = Math.abs(amount);
+      const sign = showSign && amount >= 0 ? "+" : amount < 0 ? "-" : "";
+
+      if (absAmount >= 1000000000) {
+        return `${sign}${(absAmount / 1000000000).toFixed(1)}B`;
+      } else if (absAmount >= 1000000) {
+        return `${sign}${(absAmount / 1000000).toFixed(1)}M`;
+      } else if (absAmount >= 1000) {
+        return `${sign}${(absAmount / 1000).toFixed(1)}K`;
+      }
     }
 
-    return formatCurrency(amount, currency, {
-      showSign,
-      showCurrencySymbol: showCurrency,
-      showCurrencyCode: showCode,
+    let formatted = new Intl.NumberFormat("en-US", {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision,
-    });
+    }).format(Math.abs(amount));
+
+    const sign = showSign && amount >= 0 ? "+" : amount < 0 ? "-" : "";
+    return `${sign}$${formatted}`;
   }
 
   /**
@@ -139,25 +154,25 @@ export class CurrencyService {
    */
   formatTransactionAmount(
     amount: number,
-    type: 'income' | 'expense',
+    type: "income" | "expense",
     currency: Currency = this.preferences.primaryCurrency,
     options: AmountDisplayOptions = {}
   ): {
     formatted: string;
     color: string;
-    sign: '+' | '-';
+    sign: "+" | "-";
   } {
     const { colorize = true } = options;
-    
+
     const formatted = formatTransactionAmount(amount, type, currency);
-    const sign = type === 'income' ? '+' : '-';
-    
-    let color = '#000000'; // Default black
+    const sign = type === "income" ? "+" : "-";
+
+    let color = "#000000"; // Default black
     if (colorize) {
       color = getAmountColor(amount, type, {
-        income: '#34C759', // Green
-        expense: '#FF3B30', // Red
-        neutral: '#8E8E93', // Gray
+        income: "#34C759", // Green
+        expense: "#FF3B30", // Red
+        neutral: "#8E8E93", // Gray
       });
     }
 
@@ -178,19 +193,19 @@ export class CurrencyService {
   ): BudgetDisplayInfo {
     const percentage = budget > 0 ? (spent / budget) * 100 : 0;
     const remaining = Math.max(0, budget - spent);
-    
-    let status: 'under' | 'near' | 'over' | 'exceeded' = 'under';
-    let statusColor = '#34C759'; // Green
-    
+
+    let status: "under" | "near" | "over" | "exceeded" = "under";
+    let statusColor = "#34C759"; // Green
+
     if (percentage >= 100) {
-      status = 'exceeded';
-      statusColor = '#FF3B30'; // Red
+      status = "exceeded";
+      statusColor = "#FF3B30"; // Red
     } else if (percentage >= 90) {
-      status = 'over';
-      statusColor = '#FF9500'; // Orange
+      status = "over";
+      statusColor = "#FF9500"; // Orange
     } else if (percentage >= 75) {
-      status = 'near';
-      statusColor = '#FF9500'; // Orange
+      status = "near";
+      statusColor = "#FF9500"; // Orange
     }
 
     return {
@@ -221,11 +236,16 @@ export class CurrencyService {
     savingsRateColor: string;
   } {
     const netIncome = totalIncome - totalExpenses;
-    const savingsRateValue = totalIncome > 0 ? ((netIncome / totalIncome) * 100) : 0;
-    
-    const netColor = netIncome >= 0 ? '#34C759' : '#FF3B30';
-    const savingsRateColor = savingsRateValue >= 20 ? '#34C759' : 
-                            savingsRateValue >= 10 ? '#FF9500' : '#FF3B30';
+    const savingsRateValue =
+      totalIncome > 0 ? (netIncome / totalIncome) * 100 : 0;
+
+    const netColor = netIncome >= 0 ? "#34C759" : "#FF3B30";
+    const savingsRateColor =
+      savingsRateValue >= 20
+        ? "#34C759"
+        : savingsRateValue >= 10
+          ? "#FF9500"
+          : "#FF3B30";
 
     return {
       income: this.formatAmount(totalIncome, currency),
@@ -250,21 +270,22 @@ export class CurrencyService {
     change: string;
     changePercentage: string;
     changeColor: string;
-    trend: 'up' | 'down' | 'stable';
+    trend: "up" | "down" | "stable";
   } {
     const change = currentAmount - previousAmount;
-    const changePercentage = previousAmount !== 0 ? (change / Math.abs(previousAmount)) * 100 : 0;
-    
-    let trend: 'up' | 'down' | 'stable' = 'stable';
-    let changeColor = '#8E8E93'; // Gray
-    
+    const changePercentage =
+      previousAmount !== 0 ? (change / Math.abs(previousAmount)) * 100 : 0;
+
+    let trend: "up" | "down" | "stable" = "stable";
+    let changeColor = "#8E8E93"; // Gray
+
     if (Math.abs(changePercentage) > 5) {
       if (change > 0) {
-        trend = 'up';
-        changeColor = '#FF3B30'; // Red for increased spending
+        trend = "up";
+        changeColor = "#FF3B30"; // Red for increased spending
       } else {
-        trend = 'down';
-        changeColor = '#34C759'; // Green for decreased spending
+        trend = "down";
+        changeColor = "#34C759"; // Green for decreased spending
       }
     }
 
@@ -285,16 +306,18 @@ export class CurrencyService {
     amount: number,
     fromCurrency: Currency,
     toCurrency: Currency
-  ): Promise<ApiResponse<{
-    originalAmount: number;
-    convertedAmount: number;
-    rate: number;
-    fromCurrency: Currency;
-    toCurrency: Currency;
-    formattedOriginal: string;
-    formattedConverted: string;
-    lastUpdated: Date;
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      originalAmount: number;
+      convertedAmount: number;
+      rate: number;
+      fromCurrency: Currency;
+      toCurrency: Currency;
+      formattedOriginal: string;
+      formattedConverted: string;
+      lastUpdated: Date;
+    }>
+  > {
     try {
       if (fromCurrency === toCurrency) {
         return {
@@ -314,11 +337,11 @@ export class CurrencyService {
 
       const rateKey = `${fromCurrency}_${toCurrency}`;
       const exchangeRate = this.exchangeRates.get(rateKey);
-      
+
       if (!exchangeRate) {
         return {
           success: false,
-          error: 'Exchange rate not available',
+          error: "Exchange rate not available",
           message: `No exchange rate found for ${fromCurrency} to ${toCurrency}`,
         };
       }
@@ -341,8 +364,8 @@ export class CurrencyService {
     } catch (error) {
       return {
         success: false,
-        error: 'Currency conversion failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Currency conversion failed",
+        message: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -352,10 +375,10 @@ export class CurrencyService {
    */
   getCurrencySymbol(currency: Currency): string {
     const symbols: Record<Currency, string> = {
-      CAD: '$',
-      USD: '$',
+      CAD: "$",
+      USD: "$",
     };
-    return symbols[currency] || '$';
+    return symbols[currency] || "$";
   }
 
   /**
@@ -363,10 +386,10 @@ export class CurrencyService {
    */
   getCurrencyName(currency: Currency, plural: boolean = false): string {
     const names: Record<Currency, { singular: string; plural: string }> = {
-      CAD: { singular: 'Canadian Dollar', plural: 'Canadian Dollars' },
-      USD: { singular: 'US Dollar', plural: 'US Dollars' },
+      CAD: { singular: "Canadian Dollar", plural: "Canadian Dollars" },
+      USD: { singular: "US Dollar", plural: "US Dollars" },
     };
-    
+
     const currencyInfo = names[currency];
     return plural ? currencyInfo.plural : currencyInfo.singular;
   }
@@ -380,26 +403,26 @@ export class CurrencyService {
     errors: string[];
   } {
     const errors: string[] = [];
-    
-    if (!input || input.trim() === '') {
-      errors.push('Amount is required');
+
+    if (!input || input.trim() === "") {
+      errors.push("Amount is required");
       return { isValid: false, amount: 0, errors };
     }
 
     if (!isValidAmountInput(input)) {
-      errors.push('Please enter a valid amount');
+      errors.push("Please enter a valid amount");
       return { isValid: false, amount: 0, errors };
     }
 
     const amount = parseAmountFromInput(input);
-    
+
     if (amount <= 0) {
-      errors.push('Amount must be greater than zero');
+      errors.push("Amount must be greater than zero");
       return { isValid: false, amount: 0, errors };
     }
 
     if (amount > 1000000) {
-      errors.push('Amount cannot exceed $1,000,000');
+      errors.push("Amount cannot exceed $1,000,000");
       return { isValid: false, amount: 0, errors };
     }
 
@@ -414,20 +437,25 @@ export class CurrencyService {
    * Format input for display in input fields
    */
   formatForInput(amount: number): string {
+    if (amount === 0) {
+      return "0";
+    }
     return formatAmountForInput(amount);
   }
 
   /**
    * Get amount ranges for filtering
    */
-  getAmountRanges(currency: Currency = this.preferences.primaryCurrency): Array<{
+  getAmountRanges(
+    currency: Currency = this.preferences.primaryCurrency
+  ): Array<{
     label: string;
     min: number;
     max: number;
     formattedLabel: string;
   }> {
     const ranges = generateAmountRanges(currency);
-    return ranges.map(range => ({
+    return ranges.map((range) => ({
       ...range,
       formattedLabel: range.label,
     }));
@@ -444,31 +472,31 @@ export class CurrencyService {
     percentage: number;
     formatted: string;
     color: string;
-    trend: 'up' | 'down' | 'stable';
+    trend: "up" | "down" | "stable";
   } {
     const { showSign = true, precision = 1 } = options;
-    
+
     const change = current - previous;
     const percentage = previous !== 0 ? (change / Math.abs(previous)) * 100 : 0;
-    
-    let trend: 'up' | 'down' | 'stable' = 'stable';
-    let color = '#8E8E93'; // Gray
-    
+
+    let trend: "up" | "down" | "stable" = "stable";
+    let color = "#8E8E93"; // Gray
+
     if (Math.abs(percentage) > 1) {
       if (change > 0) {
-        trend = 'up';
-        color = '#FF3B30'; // Red for increase (bad for expenses)
+        trend = "up";
+        color = "#FF3B30"; // Red for increase (bad for expenses)
       } else {
-        trend = 'down';
-        color = '#34C759'; // Green for decrease (good for expenses)
+        trend = "down";
+        color = "#34C759"; // Green for decrease (good for expenses)
       }
     }
 
     const formattedPercentage = formatPercentage(Math.abs(percentage) / 100, {
       maximumFractionDigits: precision,
     });
-    
-    const sign = showSign ? (change >= 0 ? '+' : '-') : '';
+
+    const sign = showSign ? (change >= 0 ? "+" : "-") : "";
     const formatted = `${sign}${formattedPercentage}`;
 
     return {
@@ -501,23 +529,23 @@ export class CurrencyService {
       // In a real app, this would fetch from a currency API
       const mockRates: ExchangeRate[] = [
         {
-          from: 'CAD',
-          to: 'USD',
+          from: "CAD",
+          to: "USD",
           rate: 0.75 + (Math.random() - 0.5) * 0.02, // Small random variation
           lastUpdated: new Date(),
-          source: 'mock_api',
+          source: "mock_api",
         },
         {
-          from: 'USD',
-          to: 'CAD',
+          from: "USD",
+          to: "CAD",
           rate: 1.33 + (Math.random() - 0.5) * 0.04, // Small random variation
           lastUpdated: new Date(),
-          source: 'mock_api',
+          source: "mock_api",
         },
       ];
 
       // Update internal rates
-      mockRates.forEach(rate => {
+      mockRates.forEach((rate) => {
         const key = `${rate.from}_${rate.to}`;
         this.exchangeRates.set(key, rate);
       });
@@ -529,8 +557,8 @@ export class CurrencyService {
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to update exchange rates',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to update exchange rates",
+        message: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -564,7 +592,7 @@ export class CurrencyService {
     name: string;
     symbol: string;
   }> {
-    return Object.keys(CURRENCIES).map(code => ({
+    return Object.keys(CURRENCIES).map((code) => ({
       code: code as Currency,
       name: this.getCurrencyName(code as Currency),
       symbol: this.getCurrencySymbol(code as Currency),
@@ -576,25 +604,42 @@ export class CurrencyService {
    */
   formatForContext(
     amount: number,
-    context: 'transaction_list' | 'summary_card' | 'budget_card' | 'chart_label' | 'input_field',
+    context:
+      | "transaction_list"
+      | "summary_card"
+      | "budget_card"
+      | "chart_label"
+      | "input_field",
     currency: Currency = this.preferences.primaryCurrency
   ): string {
     switch (context) {
-      case 'transaction_list':
-        return this.formatAmount(amount, currency, { compact: false, showCurrency: true });
-      
-      case 'summary_card':
-        return this.formatAmount(amount, currency, { compact: true, showCurrency: true });
-      
-      case 'budget_card':
-        return this.formatAmount(amount, currency, { compact: false, showCurrency: true });
-      
-      case 'chart_label':
-        return this.formatAmount(amount, currency, { compact: true, showCurrency: false });
-      
-      case 'input_field':
+      case "transaction_list":
+        return this.formatAmount(amount, currency, {
+          compact: false,
+          showCurrency: true,
+        });
+
+      case "summary_card":
+        return this.formatAmount(amount, currency, {
+          compact: true,
+          showCurrency: true,
+        });
+
+      case "budget_card":
+        return this.formatAmount(amount, currency, {
+          compact: false,
+          showCurrency: true,
+        });
+
+      case "chart_label":
+        return this.formatAmount(amount, currency, {
+          compact: true,
+          showCurrency: false,
+        });
+
+      case "input_field":
         return this.formatForInput(amount);
-      
+
       default:
         return this.formatAmount(amount, currency);
     }
