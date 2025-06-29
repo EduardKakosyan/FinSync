@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Category } from '@/types';
 import { COLORS, SPACING, FONTS } from '@/constants';
-import { categoryService } from '@/services/categoryService';
+import { enhancedCategoryService } from '@/services/EnhancedCategoryService';
 
 interface CategoryPickerProps {
   selectedCategory?: string;
@@ -43,7 +43,7 @@ const CategoryPicker: React.FC<CategoryPickerProps> = ({
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const response = await categoryService.getCategoriesByType(type);
+      const response = await enhancedCategoryService.getCategoriesByType(type);
       if (response.success && response.data) {
         setCategories(response.data);
       }
@@ -66,8 +66,8 @@ const CategoryPicker: React.FC<CategoryPickerProps> = ({
     }
 
     try {
-      const color = newCategoryColor || categoryService.getRandomColor();
-      const response = await categoryService.createCategory({
+      const color = newCategoryColor || enhancedCategoryService.getRandomColor();
+      const response = await enhancedCategoryService.createCategory({
         name: newCategoryName.trim(),
         color,
         type,
@@ -188,7 +188,7 @@ const CategoryPicker: React.FC<CategoryPickerProps> = ({
 
               <Text style={styles.colorSectionTitle}>Choose Color</Text>
               <View style={styles.colorGrid}>
-                {categoryService.getCategoryColors().map((color, index) => (
+                {enhancedCategoryService.getCategoryColors().map((color, index) => (
                   <ColorOption
                     key={index}
                     color={color}

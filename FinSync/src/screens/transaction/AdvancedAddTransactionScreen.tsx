@@ -21,7 +21,7 @@ import { COLORS, SPACING, FONTS } from '@/constants';
 import { CreateTransactionInput, Account, Category } from '@/types';
 import { enhancedTransactionService } from '@/services/EnhancedTransactionService';
 import { accountService } from '@/services/storage/AccountService';
-import { categoryService } from '@/services/categoryService';
+import { enhancedCategoryService } from '@/services/EnhancedCategoryService';
 import SmartAmountInput from '@/components/transaction/SmartAmountInput';
 import IntelligentCategoryPicker from '@/components/transaction/IntelligentCategoryPicker';
 import { formatCurrency, parseAmountFromInput } from '@/utils/currencyUtils';
@@ -147,7 +147,7 @@ const AdvancedAddTransactionScreen: React.FC = () => {
       }
 
       // Load categories
-      const categoriesResponse = await categoryService.getAll();
+      const categoriesResponse = await enhancedCategoryService.getCategories();
       setCategories(categoriesResponse);
 
       // Load recent transactions for intelligence

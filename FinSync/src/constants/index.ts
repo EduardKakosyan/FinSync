@@ -38,21 +38,32 @@ export const REMINDER_TYPES = {
   INVESTMENT: 'investment',
 } as const;
 
-export const DEFAULT_CATEGORIES = [
-  { name: 'Food & Dining', color: '#FF6B6B', type: 'expense' },
-  { name: 'Transportation', color: '#4ECDC4', type: 'expense' },
-  { name: 'Shopping', color: '#45B7D1', type: 'expense' },
-  { name: 'Entertainment', color: '#96CEB4', type: 'expense' },
-  { name: 'Bills & Utilities', color: '#FFEAA7', type: 'expense' },
-  { name: 'Healthcare', color: '#DDA0DD', type: 'expense' },
-  { name: 'Education', color: '#98D8C8', type: 'expense' },
-  { name: 'Travel', color: '#F7DC6F', type: 'expense' },
-  { name: 'Salary', color: '#58D68D', type: 'income' },
-  { name: 'Freelance', color: '#85C1E9', type: 'income' },
-  { name: 'Investments', color: '#F8C471', type: 'income' },
-  { name: 'Other Income', color: '#BB8FCE', type: 'income' },
-] as const;
+export const DEFAULT_CATEGORIES = [] as const;
 
+// Theme colors with light/dark mode support
+const tintColorLight = '#007AFF';
+const tintColorDark = '#fff';
+
+export const Colors = {
+  light: {
+    text: '#11181C',
+    background: '#fff',
+    tint: tintColorLight,
+    icon: '#687076',
+    tabIconDefault: '#687076',
+    tabIconSelected: tintColorLight,
+  },
+  dark: {
+    text: '#ECEDEE',
+    background: '#151718',
+    tint: tintColorDark,
+    icon: '#9BA1A6',
+    tabIconDefault: '#9BA1A6',
+    tabIconSelected: tintColorDark,
+  },
+};
+
+// Application-specific colors
 export const COLORS = {
   PRIMARY: '#007AFF',
   SECONDARY: '#5856D6',
