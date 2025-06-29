@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import IntelligentCategoryPicker from '../../src/components/transaction/IntelligentCategoryPicker';
-import { categoryService } from '../../src/services/categoryService';
+import { enhancedCategoryService } from '../../src/services/EnhancedCategoryService';
 
-// Mock the category service
-jest.mock('../../src/services/categoryService', () => ({
-  categoryService: {
+// Mock the enhanced category service
+jest.mock('../../src/services/EnhancedCategoryService', () => ({
+  enhancedCategoryService: {
     getCategoriesByType: jest.fn(),
     createCategory: jest.fn(),
   },
@@ -43,7 +43,7 @@ describe('IntelligentCategoryPicker', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (categoryService.getCategoriesByType as jest.Mock).mockResolvedValue({
+    (enhancedCategoryService.getCategoriesByType as jest.Mock).mockResolvedValue({
       success: true,
       data: mockCategories.filter(c => c.type === 'expense'),
     });
@@ -97,7 +97,7 @@ describe('IntelligentCategoryPicker', () => {
     fireEvent.press(getByText('Select category'));
 
     await waitFor(() => {
-      expect(categoryService.getCategoriesByType).toHaveBeenCalledWith('expense');
+      expect(enhancedCategoryService.getCategoriesByType).toHaveBeenCalledWith('expense');
     });
   });
 
@@ -185,7 +185,7 @@ describe('IntelligentCategoryPicker', () => {
   });
 
   it('handles adding new category', async () => {
-    (categoryService.createCategory as jest.Mock).mockResolvedValue({
+    (enhancedCategoryService.createCategory as jest.Mock).mockResolvedValue({
       success: true,
       data: {
         id: '4',
@@ -220,7 +220,7 @@ describe('IntelligentCategoryPicker', () => {
       fireEvent.press(submitButton);
     });
 
-    expect(categoryService.createCategory).toHaveBeenCalledWith({
+    expect(enhancedCategoryService.createCategory).toHaveBeenCalledWith({
       name: 'New Category',
       color: expect.any(String),
       type: 'expense',
@@ -290,6 +290,6 @@ describe('IntelligentCategoryPicker', () => {
       expect(getByText('Smart Income Categories')).toBeTruthy();
     });
 
-    expect(categoryService.getCategoriesByType).toHaveBeenCalledWith('income');
+    expect(enhancedCategoryService.getCategoriesByType).toHaveBeenCalledWith('income');
   });
 });

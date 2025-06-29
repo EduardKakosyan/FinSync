@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import AdvancedAddTransactionScreen from '../../src/screens/transaction/AdvancedAddTransactionScreen';
 import { enhancedTransactionService } from '../../src/services/EnhancedTransactionService';
 import { accountService } from '../../src/services/storage/AccountService';
-import { categoryService } from '../../src/services/categoryService';
+import { enhancedCategoryService } from '../../src/services/EnhancedCategoryService';
 
 // Mock navigation
 const mockNavigate = jest.fn();
@@ -95,7 +95,7 @@ describe('AdvancedAddTransactionScreen', () => {
     jest.clearAllMocks();
     
     (accountService.getActiveAccounts as jest.Mock).mockResolvedValue(mockAccounts);
-    (categoryService.getAll as jest.Mock).mockResolvedValue(mockCategories);
+    (enhancedCategoryService.getCategories as jest.Mock).mockResolvedValue(mockCategories);
     (enhancedTransactionService.getTransactions as jest.Mock).mockResolvedValue({
       success: true,
       data: [],
@@ -128,7 +128,7 @@ describe('AdvancedAddTransactionScreen', () => {
 
     await waitFor(() => {
       expect(accountService.getActiveAccounts).toHaveBeenCalled();
-      expect(categoryService.getAll).toHaveBeenCalled();
+      expect(enhancedCategoryService.getCategories).toHaveBeenCalled();
       expect(enhancedTransactionService.getTransactions).toHaveBeenCalled();
     });
   });

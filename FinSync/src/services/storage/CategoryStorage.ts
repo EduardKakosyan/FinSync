@@ -84,57 +84,8 @@ export class CategoryStorage extends BaseDataService<Category> {
    * Create default categories
    */
   async createDefaultCategories(): Promise<Category[]> {
-    const defaultCategories: DefaultCategoryConfig[] = [
-      // Income Categories
-      { name: 'Salary', color: '#4CAF50', type: 'income', icon: '💰', isSystemCategory: true },
-      { name: 'Freelance', color: '#8BC34A', type: 'income', icon: '💼', isSystemCategory: true },
-      { name: 'Investment Returns', color: '#CDDC39', type: 'income', icon: '📈', isSystemCategory: true },
-      { name: 'Business Income', color: '#FFC107', type: 'income', icon: '🏢', isSystemCategory: true },
-      { name: 'Other Income', color: '#FF9800', type: 'income', icon: '💸', isSystemCategory: true },
-
-      // Expense Categories - Essential
-      { name: 'Housing', color: '#F44336', type: 'expense', icon: '🏠', budgetLimit: 1500, isSystemCategory: true },
-      { name: 'Rent/Mortgage', color: '#E57373', type: 'expense', icon: '🏠', parentCategory: 'Housing', budgetLimit: 1200 },
-      { name: 'Utilities', color: '#EF5350', type: 'expense', icon: '⚡', parentCategory: 'Housing', budgetLimit: 200 },
-      { name: 'Property Tax', color: '#F44336', type: 'expense', icon: '🏛️', parentCategory: 'Housing', budgetLimit: 300 },
-
-      { name: 'Food & Dining', color: '#E91E63', type: 'expense', icon: '🍔', budgetLimit: 600, isSystemCategory: true },
-      { name: 'Groceries', color: '#EC407A', type: 'expense', icon: '🛒', parentCategory: 'Food & Dining', budgetLimit: 400 },
-      { name: 'Restaurants', color: '#F06292', type: 'expense', icon: '🍽️', parentCategory: 'Food & Dining', budgetLimit: 200 },
-
-      { name: 'Transportation', color: '#9C27B0', type: 'expense', icon: '🚗', budgetLimit: 400, isSystemCategory: true },
-      { name: 'Gas', color: '#AB47BC', type: 'expense', icon: '⛽', parentCategory: 'Transportation', budgetLimit: 150 },
-      { name: 'Public Transit', color: '#BA68C8', type: 'expense', icon: '🚌', parentCategory: 'Transportation', budgetLimit: 100 },
-      { name: 'Car Maintenance', color: '#CE93D8', type: 'expense', icon: '🔧', parentCategory: 'Transportation', budgetLimit: 150 },
-
-      // Expense Categories - Lifestyle
-      { name: 'Shopping', color: '#673AB7', type: 'expense', icon: '🛍️', budgetLimit: 300, isSystemCategory: true },
-      { name: 'Clothing', color: '#7986CB', type: 'expense', icon: '👕', parentCategory: 'Shopping', budgetLimit: 150 },
-      { name: 'Electronics', color: '#9FA8DA', type: 'expense', icon: '📱', parentCategory: 'Shopping', budgetLimit: 150 },
-
-      { name: 'Entertainment', color: '#3F51B5', type: 'expense', icon: '🎬', budgetLimit: 200, isSystemCategory: true },
-      { name: 'Movies', color: '#5C6BC0', type: 'expense', icon: '🎥', parentCategory: 'Entertainment', budgetLimit: 50 },
-      { name: 'Streaming Services', color: '#7986CB', type: 'expense', icon: '📺', parentCategory: 'Entertainment', budgetLimit: 50 },
-      { name: 'Sports & Recreation', color: '#9FA8DA', type: 'expense', icon: '⚽', parentCategory: 'Entertainment', budgetLimit: 100 },
-
-      { name: 'Health & Wellness', color: '#2196F3', type: 'expense', icon: '⚕️', budgetLimit: 300, isSystemCategory: true },
-      { name: 'Medical', color: '#42A5F5', type: 'expense', icon: '🏥', parentCategory: 'Health & Wellness', budgetLimit: 200 },
-      { name: 'Fitness', color: '#64B5F6', type: 'expense', icon: '💪', parentCategory: 'Health & Wellness', budgetLimit: 100 },
-
-      { name: 'Education', color: '#03DAC6', type: 'expense', icon: '📚', budgetLimit: 200, isSystemCategory: true },
-      { name: 'Travel', color: '#00BCD4', type: 'expense', icon: '✈️', budgetLimit: 500, isSystemCategory: true },
-
-      // Financial Categories
-      { name: 'Banking & Finance', color: '#009688', type: 'expense', icon: '🏦', budgetLimit: 100, isSystemCategory: true },
-      { name: 'Insurance', color: '#26A69A', type: 'expense', icon: '🛡️', budgetLimit: 200, isSystemCategory: true },
-      { name: 'Investments', color: '#66BB6A', type: 'expense', icon: '📊', budgetLimit: 1000, isSystemCategory: true },
-      { name: 'Savings', color: '#81C784', type: 'expense', icon: '🏦', budgetLimit: 1000, isSystemCategory: true },
-
-      // Miscellaneous
-      { name: 'Personal Care', color: '#FFC107', type: 'expense', icon: '💅', budgetLimit: 100, isSystemCategory: true },
-      { name: 'Gifts & Donations', color: '#FF9800', type: 'expense', icon: '🎁', budgetLimit: 150, isSystemCategory: true },
-      { name: 'Other Expenses', color: '#FF5722', type: 'expense', icon: '📝', budgetLimit: 200, isSystemCategory: true },
-    ];
+    // Start with empty categories for clean user experience
+    const defaultCategories: DefaultCategoryConfig[] = [];
 
     const createdCategories: Category[] = [];
     const parentMap = new Map<string, string>(); // child name -> parent name

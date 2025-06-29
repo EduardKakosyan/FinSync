@@ -17,6 +17,7 @@ import { formatCurrency } from '@/utils/currencyUtils';
 import { TotalSpendingCard, TotalIncomeCard, NetIncomeCard } from '@/components/transaction/SpendingCard';
 import { TopCategoriesBreakdown } from '@/components/transaction/CategoryBreakdown';
 import { CompactTransactionItem } from '@/components/transaction/TransactionItem';
+import { enhancedTransactionService } from '@/services/EnhancedTransactionService';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'Home'>;
 
@@ -113,45 +114,20 @@ const HomeScreen = () => {
         }
       ];
 
-      const mockRecentTransactions: Transaction[] = [
-        {
-          id: 'trans-1',
-          amount: 4.50,
-          date: new Date(),
-          category: 'Food & Dining',
-          description: 'Coffee Shop',
-          type: 'expense',
-          accountId: 'acc-1',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: 'trans-2',
-          amount: 3500.00,
-          date: new Date(Date.now() - 86400000),
-          category: 'Salary',
-          description: 'Monthly Salary',
-          type: 'income',
-          accountId: 'acc-1',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: 'trans-3',
-          amount: 45.20,
-          date: new Date(Date.now() - 172800000),
-          category: 'Transportation',
-          description: 'Gas Station',
-          type: 'expense',
-          accountId: 'acc-1',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ];
+      // Get recent transactions from actual data
+      const transactionsResponse = await enhancedTransactionService.getTransactions();
+      let recentTransactionsData: Transaction[] = [];
+      
+      if (transactionsResponse.success && transactionsResponse.data) {
+        // Sort by date (newest first) and take the first 5
+        recentTransactionsData = transactionsResponse.data
+          .sort((a, b) => b.date.getTime() - a.date.getTime())
+          .slice(0, 5);
+      }
 
       setSpendingData(mockSpendingData);
       setCategoryBreakdown(mockCategoryBreakdown);
-      setRecentTransactions(mockRecentTransactions);
+      setRecentTransactions(recentTransactionsData);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       setError('Failed to load dashboard data');

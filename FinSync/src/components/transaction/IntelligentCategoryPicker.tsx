@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Category } from '@/types';
 import { COLORS, SPACING, FONTS } from '@/constants';
-import { categoryService } from '@/services/categoryService';
+import { enhancedCategoryService } from '@/services/EnhancedCategoryService';
 
 interface IntelligentCategoryPickerProps {
   selectedCategory?: string;
@@ -72,7 +72,7 @@ const IntelligentCategoryPicker: React.FC<IntelligentCategoryPickerProps> = ({
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const response = await categoryService.getCategoriesByType(transactionType);
+      const response = await enhancedCategoryService.getCategoriesByType(transactionType);
       if (response.success && response.data) {
         setCategories(response.data);
       }
@@ -275,7 +275,7 @@ const IntelligentCategoryPicker: React.FC<IntelligentCategoryPickerProps> = ({
 
     try {
       const color = newCategoryColor || getRandomCategoryColor();
-      const response = await categoryService.createCategory({
+      const response = await enhancedCategoryService.createCategory({
         name: newCategoryName.trim(),
         color,
         type: transactionType,

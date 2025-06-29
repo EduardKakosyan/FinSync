@@ -6,7 +6,7 @@ import {
   Category,
   ApiResponse,
 } from '@/types';
-import { transactionService } from '@/services/transactionService';
+import { enhancedTransactionService } from '@/services/EnhancedTransactionService';
 import { DEFAULT_CATEGORIES } from '@/constants';
 
 // State interface
@@ -137,7 +137,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
   const loadTransactions = async (): Promise<void> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await transactionService.getTransactions();
+      const response = await enhancedTransactionService.getTransactions();
       
       if (response.success && response.data) {
         dispatch({ type: 'SET_TRANSACTIONS', payload: response.data });
@@ -157,7 +157,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
   const createTransaction = async (input: CreateTransactionInput): Promise<ApiResponse<Transaction>> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await transactionService.createTransaction(input);
+      const response = await enhancedTransactionService.createTransaction(input);
       
       if (response.success && response.data) {
         dispatch({ type: 'ADD_TRANSACTION', payload: response.data });
@@ -181,7 +181,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
   const updateTransaction = async (input: UpdateTransactionInput): Promise<ApiResponse<Transaction>> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await transactionService.updateTransaction(input);
+      const response = await enhancedTransactionService.updateTransaction(input);
       
       if (response.success && response.data) {
         dispatch({ type: 'UPDATE_TRANSACTION', payload: response.data });
@@ -205,7 +205,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
   const deleteTransaction = async (id: string): Promise<ApiResponse<boolean>> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await transactionService.deleteTransaction(id);
+      const response = await enhancedTransactionService.deleteTransaction(id);
       
       if (response.success) {
         dispatch({ type: 'DELETE_TRANSACTION', payload: id });
@@ -228,7 +228,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
 
   const getTransactionsByDateRange = async (startDate: Date, endDate: Date): Promise<Transaction[]> => {
     try {
-      const response = await transactionService.getTransactionsByDateRange(startDate, endDate);
+      const response = await enhancedTransactionService.getTransactionsByDateRange(startDate, endDate);
       if (response.success && response.data) {
         return response.data;
       }
@@ -245,7 +245,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
 
   const getTransactionsByCategory = async (category: string): Promise<Transaction[]> => {
     try {
-      const response = await transactionService.getTransactionsByCategory(category);
+      const response = await enhancedTransactionService.getTransactionsByCategory(category);
       if (response.success && response.data) {
         return response.data;
       }
@@ -262,7 +262,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
 
   const searchTransactions = async (query: string): Promise<Transaction[]> => {
     try {
-      const response = await transactionService.searchTransactions(query);
+      const response = await enhancedTransactionService.searchTransactions(query);
       if (response.success && response.data) {
         return response.data;
       }
@@ -279,7 +279,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
 
   const refreshStats = async (): Promise<void> => {
     try {
-      const response = await transactionService.getTransactionStats();
+      const response = await enhancedTransactionService.getTransactionStats();
       if (response.success && response.data) {
         dispatch({ type: 'SET_STATS', payload: response.data });
       }
