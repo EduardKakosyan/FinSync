@@ -1,40 +1,30 @@
 import React from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
-  TouchableOpacity,
   RefreshControl,
   SafeAreaView,
+  View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useHomeViewModel } from "../../src/screens/home/HomeViewModel";
 import { formatCurrency } from "../../src/utils/currencyUtils";
+import { 
+  Typography, 
+  Card, 
+  Button, 
+  useColors, 
+  useTokens,
+  Heading1,
+  BodyText,
+  Amount,
+  Caption
+} from "../../src/design-system";
 
 type TimePeriod = "day" | "week" | "month";
 
-const COLORS = {
-  primary: "#007AFF",
-  background: "#F8F9FA",
-  card: "#FFFFFF",
-  text: "#1C1C1E",
-  textSecondary: "#8E8E93",
-  success: "#34C759",
-  danger: "#FF3B30",
-  warning: "#FF9500",
-  border: "#E5E5EA",
-};
-
-const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-};
-
 export default function HomeScreen() {
+  const colors = useColors();
+  const tokens = useTokens();
   const {
     spendingData,
     selectedPeriod,
@@ -60,86 +50,119 @@ export default function HomeScreen() {
     color: string;
     icon: keyof typeof Ionicons.glyphMap;
   }) => (
-    <View style={[styles.card, { borderLeftColor: color, borderLeftWidth: 4 }]}>
-      <View style={styles.cardHeader}>
+    <Card 
+      variant="elevated" 
+      style={{ 
+        borderLeftColor: color, 
+        borderLeftWidth: 4,
+        marginBottom: tokens.Spacing.md
+      }}
+    >
+      <View style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        marginBottom: tokens.Spacing.sm 
+      }}>
         <Ionicons name={icon} size={24} color={color} />
-        <Text style={styles.cardTitle}>{title}</Text>
+        <Typography 
+          variant="label" 
+          style={{ marginLeft: tokens.Spacing.sm }}
+        >
+          {title}
+        </Typography>
       </View>
-      <Text style={[styles.amount, { color }]}>{formatCurrency(amount)}</Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-    </View>
+      <Amount style={{ color, marginBottom: tokens.Spacing.xs }}>
+        {formatCurrency(amount)}
+      </Amount>
+      {subtitle && (
+        <Caption color="secondary">{subtitle}</Caption>
+      )}
+    </Card>
   );
 
   const TimePeriodSelector = () => (
-    <View style={styles.periodSelector}>
-      {(["day", "week", "month"] as TimePeriod[]).map((period) => (
-        <TouchableOpacity
-          key={period}
-          style={[
-            styles.periodButton,
-            selectedPeriod === period && styles.periodButtonActive,
-          ]}
-          onPress={() => changePeriod(period)}
-          accessibilityRole="button"
-          accessibilityState={{ selected: selectedPeriod === period }}
-          accessibilityLabel={`Select ${period} period`}
-        >
-          <Text
-            style={[
-              styles.periodButtonText,
-              selectedPeriod === period && styles.periodButtonTextActive,
-            ]}
+    <Card 
+      variant="default" 
+      style={{ 
+        marginHorizontal: tokens.Spacing.lg,
+        marginBottom: tokens.Spacing.lg,
+        padding: tokens.Spacing.xs
+      }}
+    >
+      <View style={{ flexDirection: 'row', gap: tokens.Spacing.xs }}>
+        {(["day", "week", "month"] as TimePeriod[]).map((period) => (
+          <Button
+            key={period}
+            variant={selectedPeriod === period ? "primary" : "ghost"}
+            size="small"
+            style={{ flex: 1 }}
+            onPress={() => changePeriod(period)}
+            accessibilityState={{ selected: selectedPeriod === period }}
+            accessibilityLabel={`Select ${period} period`}
           >
             {period.charAt(0).toUpperCase() + period.slice(1)}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+          </Button>
+        ))}
+      </View>
+    </Card>
   );
 
   const TransactionItem = ({ transaction }: { transaction: any }) => (
-    <View style={styles.transactionItem}>
-      <View style={styles.transactionIcon}>
+    <View style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: tokens.Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    }}>
+      <View style={{ marginRight: tokens.Spacing.md }}>
         <Ionicons
           name={transaction.type === "income" ? "add-circle" : "remove-circle"}
           size={20}
-          color={transaction.type === "income" ? COLORS.success : COLORS.danger}
+          color={transaction.type === "income" ? colors.success : colors.error}
         />
       </View>
-      <View style={styles.transactionDetails}>
-        <Text style={styles.transactionDescription}>
+      <View style={{ flex: 1 }}>
+        <Typography variant="body" style={{ marginBottom: tokens.Spacing.xs }}>
           {transaction.description}
-        </Text>
-        <Text style={styles.transactionCategory}>{transaction.category}</Text>
+        </Typography>
+        <Caption color="secondary">{transaction.category}</Caption>
       </View>
-      <Text
-        style={[
-          styles.transactionAmount,
-          {
-            color:
-              transaction.type === "income" ? COLORS.success : COLORS.danger,
-          },
-        ]}
+      <Amount
+        style={{
+          color: transaction.type === "income" ? colors.success : colors.error,
+        }}
       >
         {transaction.type === "income" ? "+" : "-"}
         {formatCurrency(Math.abs(transaction.amount))}
-      </Text>
+      </Amount>
     </View>
   );
 
   const CategoryItem = ({ category }: { category: any }) => (
-    <View style={styles.categoryItem}>
+    <View style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: tokens.Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    }}>
       <View
-        style={[
-          styles.categoryColor,
-          { backgroundColor: category.categoryColor },
-        ]}
+        style={{
+          width: 12,
+          height: 12,
+          borderRadius: 6,
+          backgroundColor: category.categoryColor,
+          marginRight: tokens.Spacing.md,
+        }}
       />
-      <View style={styles.categoryDetails}>
-        <Text style={styles.categoryName}>{category.categoryName}</Text>
-        <Text style={styles.categoryAmount}>
+      <View style={{ flex: 1 }}>
+        <Typography variant="body" style={{ marginBottom: tokens.Spacing.xs }}>
+          {category.categoryName}
+        </Typography>
+        <Caption color="secondary">
           {formatCurrency(category.amount)} ({category.percentage.toFixed(1)}%)
-        </Text>
+        </Caption>
       </View>
       <Ionicons
         name={
@@ -152,81 +175,119 @@ export default function HomeScreen() {
         size={16}
         color={
           category.trend === "up"
-            ? COLORS.danger
+            ? colors.error
             : category.trend === "down"
-              ? COLORS.success
-              : COLORS.textSecondary
+              ? colors.success
+              : colors.textSecondary
         }
       />
     </View>
   );
 
   const ReceiptCaptureButton = () => (
-    <TouchableOpacity style={styles.receiptButton}>
-      <Ionicons name="camera" size={24} color={COLORS.card} />
-      <Text style={styles.receiptButtonText}>Scan Receipt</Text>
-    </TouchableOpacity>
+    <Button
+      variant="primary"
+      size="large"
+      fullWidth
+      leftIcon={<Ionicons name="camera" size={24} color={colors.textInverse} />}
+      style={{ marginTop: tokens.Spacing.md }}
+    >
+      Scan Receipt
+    </Button>
   );
 
   if (errorMessage) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={48} color={COLORS.danger} />
-          <Text style={styles.errorText}>{errorMessage}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={refresh}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
+      <SafeAreaView style={{ 
+        flex: 1, 
+        backgroundColor: colors.background 
+      }}>
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: tokens.Spacing.lg,
+        }}>
+          <Ionicons name="alert-circle" size={48} color={colors.error} />
+          <BodyText 
+            color="secondary" 
+            align="center"
+            style={{ 
+              marginVertical: tokens.Spacing.md 
+            }}
+          >
+            {errorMessage}
+          </BodyText>
+          <Button variant="primary" onPress={refresh}>
+            Retry
+          </Button>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ 
+      flex: 1, 
+      backgroundColor: colors.background 
+    }}>
       <ScrollView
-        style={styles.scrollView}
+        style={{ flex: 1 }}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>FinSync</Text>
-          <Text style={styles.subtitle}>
+        <View style={{
+          padding: tokens.Spacing.lg,
+          paddingBottom: tokens.Spacing.md,
+        }}>
+          <Heading1 style={{ marginBottom: tokens.Spacing.xs }}>
+            FinSync
+          </Heading1>
+          <BodyText color="secondary">
             {selectedPeriod === "day" && "Today's Overview"}
             {selectedPeriod === "week" && "This Week's Overview"}
             {selectedPeriod === "month" && "This Month's Overview"}
-          </Text>
+          </BodyText>
         </View>
 
         <TimePeriodSelector />
 
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading spending data...</Text>
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: tokens.Spacing.lg,
+            minHeight: 200,
+          }}>
+            <BodyText color="secondary" align="center">
+              Loading spending data...
+            </BodyText>
           </View>
         ) : spendingData ? (
-          <View style={styles.cardsContainer}>
+          <View style={{
+            paddingHorizontal: tokens.Spacing.lg,
+            marginBottom: tokens.Spacing.lg,
+          }}>
             <SpendingCard
               title="Total Income"
               amount={spendingData.totalIncome}
               subtitle={`Daily avg: ${formatCurrency(spendingData.dailyAverage)}`}
-              color={COLORS.success}
+              color={colors.success}
               icon="trending-up"
             />
             <SpendingCard
               title="Total Expenses"
               amount={spendingData.totalExpenses}
-              color={COLORS.danger}
+              color={colors.error}
               icon="trending-down"
             />
             <SpendingCard
               title="Net Income"
               amount={spendingData.netIncome}
-              color={
-                spendingData.netIncome >= 0 ? COLORS.success : COLORS.danger
-              }
+              color={spendingData.netIncome >= 0 ? colors.success : colors.error}
               icon={
                 spendingData.netIncome >= 0
                   ? "checkmark-circle"
@@ -237,230 +298,53 @@ export default function HomeScreen() {
         ) : null}
 
         {categoryBreakdown.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Spending Breakdown</Text>
-            <View style={styles.card}>
+          <View style={{
+            paddingHorizontal: tokens.Spacing.lg,
+            marginBottom: tokens.Spacing.lg,
+          }}>
+            <Typography 
+              variant="h3" 
+              style={{ marginBottom: tokens.Spacing.md }}
+            >
+              Spending Breakdown
+            </Typography>
+            <Card variant="default">
               {categoryBreakdown.slice(0, 5).map((category) => (
                 <CategoryItem key={category.categoryId} category={category} />
               ))}
-            </View>
+            </Card>
           </View>
         )}
 
         {recentTransactions.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent Transactions</Text>
-            <View style={styles.card}>
+          <View style={{
+            paddingHorizontal: tokens.Spacing.lg,
+            marginBottom: tokens.Spacing.lg,
+          }}>
+            <Typography 
+              variant="h3" 
+              style={{ marginBottom: tokens.Spacing.md }}
+            >
+              Recent Transactions
+            </Typography>
+            <Card variant="default">
               {recentTransactions.slice(0, 5).map((transaction) => (
                 <TransactionItem
                   key={transaction.id}
                   transaction={transaction}
                 />
               ))}
-            </View>
+            </Card>
           </View>
         )}
 
-        <View style={styles.section}>
+        <View style={{
+          paddingHorizontal: tokens.Spacing.lg,
+          marginBottom: tokens.Spacing.lg,
+        }}>
           <ReceiptCaptureButton />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    padding: SPACING.lg,
-    paddingBottom: SPACING.md,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-  },
-  periodSelector: {
-    flexDirection: "row",
-    backgroundColor: COLORS.card,
-    marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.lg,
-    borderRadius: 12,
-    padding: SPACING.xs,
-  },
-  periodButton: {
-    flex: 1,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  periodButtonActive: {
-    backgroundColor: COLORS.primary,
-  },
-  periodButtonText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.textSecondary,
-  },
-  periodButtonTextActive: {
-    color: COLORS.card,
-  },
-  cardsContainer: {
-    paddingHorizontal: SPACING.lg,
-    gap: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  card: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: SPACING.md,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: SPACING.sm,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.text,
-    marginLeft: SPACING.sm,
-  },
-  amount: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: SPACING.xs,
-  },
-  section: {
-    paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.lg,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: COLORS.text,
-    marginBottom: SPACING.md,
-  },
-  transactionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  transactionIcon: {
-    marginRight: SPACING.md,
-  },
-  transactionDetails: {
-    flex: 1,
-  },
-  transactionDescription: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
-  },
-  transactionCategory: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  categoryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  categoryColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: SPACING.md,
-  },
-  categoryDetails: {
-    flex: 1,
-  },
-  categoryName: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
-  },
-  categoryAmount: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  receiptButton: {
-    backgroundColor: COLORS.primary,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.md,
-    borderRadius: 12,
-    gap: SPACING.sm,
-  },
-  receiptButtonText: {
-    color: COLORS.card,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.lg,
-  },
-  errorText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-    marginVertical: SPACING.md,
-  },
-  retryButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: COLORS.card,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.lg,
-    minHeight: 200,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-  },
-});
