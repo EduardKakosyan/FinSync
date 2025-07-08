@@ -50,110 +50,134 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const { colors, tokens } = useTheme();
 
+  // Simplified button styles
   const getButtonStyles = (): ViewStyle => {
-    const baseStyle: ViewStyle = {
-      borderRadius: tokens.Layout.borderRadius.md,
+    const base: ViewStyle = {
+      borderRadius: 8,
       borderWidth: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: tokens.Layout.touchTarget.minimum,
+      minHeight: 44,
     };
 
     // Size styles
-    const sizeStyles: Record<ButtonSize, ViewStyle> = {
-      small: {
-        paddingHorizontal: tokens.Spacing.md,
-        paddingVertical: tokens.Spacing.sm,
-        minHeight: tokens.Layout.touchTarget.comfortable - 8,
-      },
-      medium: {
-        paddingHorizontal: tokens.Spacing.lg,
-        paddingVertical: tokens.Spacing.md,
-        minHeight: tokens.Layout.touchTarget.minimum,
-      },
-      large: {
-        paddingHorizontal: tokens.Spacing.xl,
-        paddingVertical: tokens.Spacing.lg,
-        minHeight: tokens.Layout.touchTarget.large,
-      },
-    };
+    let sizeStyle: ViewStyle = {};
+    switch (size) {
+      case 'small':
+        sizeStyle = {
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          minHeight: 36,
+        };
+        break;
+      case 'medium':
+        sizeStyle = {
+          paddingHorizontal: 24,
+          paddingVertical: 12,
+          minHeight: 44,
+        };
+        break;
+      case 'large':
+        sizeStyle = {
+          paddingHorizontal: 32,
+          paddingVertical: 16,
+          minHeight: 52,
+        };
+        break;
+    }
 
     // Variant styles
-    const variantStyles: Record<ButtonVariant, ViewStyle> = {
-      primary: {
-        backgroundColor: disabled ? colors.border : colors.primary,
-        borderColor: disabled ? colors.border : colors.primary,
-        ...tokens.Layout.shadows.sm,
-      },
-      secondary: {
-        backgroundColor: 'transparent',
-        borderColor: disabled ? colors.border : colors.primary,
-      },
-      ghost: {
-        backgroundColor: 'transparent',
-        borderColor: 'transparent',
-      },
-      destructive: {
-        backgroundColor: disabled ? colors.border : colors.error,
-        borderColor: disabled ? colors.border : colors.error,
-        ...tokens.Layout.shadows.sm,
-      },
-    };
+    let variantStyle: ViewStyle = {};
+    switch (variant) {
+      case 'primary':
+        variantStyle = {
+          backgroundColor: disabled ? '#9CA3AF' : colors.primary,
+          borderColor: disabled ? '#9CA3AF' : colors.primary,
+        };
+        break;
+      case 'secondary':
+        variantStyle = {
+          backgroundColor: 'transparent',
+          borderColor: disabled ? '#9CA3AF' : colors.primary,
+        };
+        break;
+      case 'ghost':
+        variantStyle = {
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+        };
+        break;
+      case 'destructive':
+        variantStyle = {
+          backgroundColor: disabled ? '#9CA3AF' : colors.error,
+          borderColor: disabled ? '#9CA3AF' : colors.error,
+        };
+        break;
+    }
 
     const fullWidthStyle: ViewStyle = fullWidth ? { width: '100%' } : {};
 
     return {
-      ...baseStyle,
-      ...sizeStyles[size],
-      ...variantStyles[variant],
+      ...base,
+      ...sizeStyle,
+      ...variantStyle,
       ...fullWidthStyle,
     };
   };
 
+  // Simplified text styles
   const getTextStyles = (): TextStyle => {
-    const baseTextStyle: TextStyle = {
-      fontFamily: tokens.Typography.fonts.primary,
+    const base: TextStyle = {
+      fontSize: 16,
       fontWeight: '600',
       textAlign: 'center',
+      fontFamily: 'System',
     };
 
     // Size text styles
-    const sizeTextStyles: Record<ButtonSize, TextStyle> = {
-      small: {
-        fontSize: tokens.Typography.textStyles.buttonSmall.fontSize,
-        lineHeight: tokens.Typography.textStyles.buttonSmall.lineHeight,
-      },
-      medium: {
-        fontSize: tokens.Typography.textStyles.button.fontSize,
-        lineHeight: tokens.Typography.textStyles.button.lineHeight,
-      },
-      large: {
-        fontSize: tokens.Typography.textStyles.button.fontSize,
-        lineHeight: tokens.Typography.textStyles.button.lineHeight,
-      },
-    };
+    let sizeTextStyle: TextStyle = {};
+    switch (size) {
+      case 'small':
+        sizeTextStyle = { fontSize: 14 };
+        break;
+      case 'medium':
+        sizeTextStyle = { fontSize: 16 };
+        break;
+      case 'large':
+        sizeTextStyle = { fontSize: 16 };
+        break;
+    }
 
-    // Variant text styles
-    const variantTextStyles: Record<ButtonVariant, TextStyle> = {
-      primary: {
-        color: disabled ? colors.textTertiary : '#FFFFFF',
-      },
-      secondary: {
-        color: disabled ? colors.textTertiary : colors.primary,
-      },
-      ghost: {
-        color: disabled ? colors.textTertiary : colors.primary,
-      },
-      destructive: {
-        color: disabled ? colors.textTertiary : '#FFFFFF',
-      },
-    };
+    // Variant text styles - Use explicit colors
+    let variantTextStyle: TextStyle = {};
+    switch (variant) {
+      case 'primary':
+        variantTextStyle = {
+          color: disabled ? '#6B7280' : '#FFFFFF',
+        };
+        break;
+      case 'secondary':
+        variantTextStyle = {
+          color: disabled ? '#6B7280' : colors.primary,
+        };
+        break;
+      case 'ghost':
+        variantTextStyle = {
+          color: disabled ? '#6B7280' : colors.primary,
+        };
+        break;
+      case 'destructive':
+        variantTextStyle = {
+          color: disabled ? '#6B7280' : '#FFFFFF',
+        };
+        break;
+    }
 
     return {
-      ...baseTextStyle,
-      ...sizeTextStyles[size],
-      ...variantTextStyles[variant],
+      ...base,
+      ...sizeTextStyle,
+      ...variantTextStyle,
     };
   };
 
@@ -193,14 +217,14 @@ export const Button: React.FC<ButtonProps> = ({
         <ActivityIndicator 
           size="small" 
           color={spinnerColor}
-          style={{ marginRight: showContent ? tokens.Spacing.sm : 0 }}
+          style={{ marginRight: showContent ? 8 : 0 }}
         />
       )}
       
       {showContent && (
         <View style={styles.contentContainer}>
           {leftIcon && (
-            <View style={[styles.iconContainer, { marginRight: tokens.Spacing.sm }]}>
+            <View style={[styles.iconContainer, { marginRight: 8 }]}>
               {leftIcon}
             </View>
           )}
@@ -210,7 +234,7 @@ export const Button: React.FC<ButtonProps> = ({
           </Text>
           
           {rightIcon && (
-            <View style={[styles.iconContainer, { marginLeft: tokens.Spacing.sm }]}>
+            <View style={[styles.iconContainer, { marginLeft: 8 }]}>
               {rightIcon}
             </View>
           )}

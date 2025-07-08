@@ -8,6 +8,7 @@
     "scheme": "finsync",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "owner": "eduardkakosyan",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.FinSync",
@@ -61,6 +62,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "developmentClient": {
+      "silentLaunch": false
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      }
     }
   }
 }
