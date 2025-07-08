@@ -71,7 +71,7 @@ const HalifaxLocalScreen = () => {
       {showHSTCalculator && (
         <View style={styles.calculatorContent}>
           <Text style={styles.calculatorDescription}>
-            Calculate Nova Scotia HST (15%) for your purchases
+            Calculate Nova Scotia HST (14%) for your purchases
           </Text>
 
           <View style={styles.inputContainer}>
@@ -111,7 +111,7 @@ const HalifaxLocalScreen = () => {
                 <Text style={styles.resultValue}>{formatCurrency(hstCalculation.subtotal)}</Text>
               </View>
               <View style={styles.resultRow}>
-                <Text style={styles.resultLabel}>HST (15%):</Text>
+                <Text style={styles.resultLabel}>HST (14%):</Text>
                 <Text style={styles.resultValue}>{formatCurrency(hstCalculation.hstAmount)}</Text>
               </View>
               <View style={[styles.resultRow, styles.totalRow]}>
