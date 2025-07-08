@@ -2,6 +2,13 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import { ThemedText } from '../../src/components/template/ThemedText';
 import { ThemedView } from '../../src/components/template/ThemedView';
+import { ThemeProvider } from '../../src/design-system';
+
+// Mock Platform for React Native
+jest.doMock('react-native/Libraries/Utilities/Platform', () => ({
+  OS: 'ios',
+  select: (platforms: any) => platforms.ios || platforms.default,
+}));
 
 // Mock useThemeColor hook
 jest.mock('../../hooks/useThemeColor', () => ({
@@ -15,15 +22,23 @@ jest.mock('../../hooks/useThemeColor', () => ({
   }),
 }));
 
+const MockThemeProvider = ({ children }: { children: React.ReactNode }) => (
+  <ThemeProvider>{children}</ThemeProvider>
+);
+
+const renderWithTheme = (component: React.ReactElement) => {
+  return render(<MockThemeProvider>{component}</MockThemeProvider>);
+};
+
 describe('ThemedText Component', () => {
   describe('Basic Rendering', () => {
     it('renders with default props', () => {
-      const { getByText } = render(<ThemedText>Test Text</ThemedText>);
+      const { getByText } = renderWithTheme(<ThemedText>Test Text</ThemedText>);
       expect(getByText('Test Text')).toBeTruthy();
     });
 
     it('applies custom light and dark colors', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText lightColor="#FF0000" darkColor="#00FF00">
           Colored Text
         </ThemedText>
@@ -35,7 +50,7 @@ describe('ThemedText Component', () => {
 
     it('renders with custom style', () => {
       const customStyle = { fontSize: 20, fontWeight: 'bold' };
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText style={customStyle}>Styled Text</ThemedText>
       );
       
@@ -45,35 +60,35 @@ describe('ThemedText Component', () => {
 
   describe('Text Types', () => {
     it('renders default type correctly', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText type="default">Default Text</ThemedText>
       );
       expect(getByText('Default Text')).toBeTruthy();
     });
 
     it('renders title type correctly', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText type="title">Title Text</ThemedText>
       );
       expect(getByText('Title Text')).toBeTruthy();
     });
 
     it('renders subtitle type correctly', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText type="subtitle">Subtitle Text</ThemedText>
       );
       expect(getByText('Subtitle Text')).toBeTruthy();
     });
 
     it('renders defaultSemiBold type correctly', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText type="defaultSemiBold">SemiBold Text</ThemedText>
       );
       expect(getByText('SemiBold Text')).toBeTruthy();
     });
 
     it('renders link type correctly', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText type="link">Link Text</ThemedText>
       );
       expect(getByText('Link Text')).toBeTruthy();
@@ -82,7 +97,7 @@ describe('ThemedText Component', () => {
 
   describe('Text Props Passthrough', () => {
     it('passes through React Native Text props', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText numberOfLines={2} ellipsizeMode="tail">
           Long text that should be truncated
         </ThemedText>
@@ -92,7 +107,7 @@ describe('ThemedText Component', () => {
     });
 
     it('handles accessibility props', () => {
-      const { getByText } = render(
+      const { getByText } = renderWithTheme(
         <ThemedText 
           accessibilityLabel="Test label"
           accessibilityRole="text"
@@ -107,17 +122,17 @@ describe('ThemedText Component', () => {
 
   describe('Edge Cases', () => {
     it('handles empty text', () => {
-      const { root } = render(<ThemedText testID="empty-text"></ThemedText>);
+      const { root } = renderWithTheme(<ThemedText testID="empty-text"></ThemedText>);
       expect(root).toBeTruthy();
     });
 
     it('handles undefined children', () => {
-      const { root } = render(<ThemedText testID="undefined-children">{undefined}</ThemedText>);
+      const { root } = renderWithTheme(<ThemedText testID="undefined-children">{undefined}</ThemedText>);
       expect(root).toBeTruthy();
     });
 
     it('handles null children', () => {
-      const { root } = render(<ThemedText testID="null-children">{null}</ThemedText>);
+      const { root } = renderWithTheme(<ThemedText testID="null-children">{null}</ThemedText>);
       expect(root).toBeTruthy();
     });
   });
@@ -126,7 +141,7 @@ describe('ThemedText Component', () => {
 describe('ThemedView Component', () => {
   describe('Basic Rendering', () => {
     it('renders with default props', () => {
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView testID="themed-view">
           <ThemedText>Child Content</ThemedText>
         </ThemedView>
@@ -136,7 +151,7 @@ describe('ThemedView Component', () => {
     });
 
     it('applies custom light and dark colors', () => {
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView 
           testID="colored-view"
           lightColor="#FF0000" 
@@ -151,7 +166,7 @@ describe('ThemedView Component', () => {
 
     it('renders with custom style', () => {
       const customStyle = { padding: 20, margin: 10 };
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView testID="styled-view" style={customStyle}>
           <ThemedText>Styled Content</ThemedText>
         </ThemedView>
@@ -163,7 +178,7 @@ describe('ThemedView Component', () => {
 
   describe('View Props Passthrough', () => {
     it('passes through React Native View props', () => {
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView 
           testID="view-with-props"
           pointerEvents="none"
@@ -176,7 +191,7 @@ describe('ThemedView Component', () => {
     });
 
     it('handles accessibility props', () => {
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView 
           testID="accessible-view"
           accessibilityLabel="Main container"
@@ -192,7 +207,7 @@ describe('ThemedView Component', () => {
 
   describe('Children Rendering', () => {
     it('renders single child correctly', () => {
-      const { getByText, getByTestId } = render(
+      const { getByText, getByTestId } = renderWithTheme(
         <ThemedView testID="single-child-view">
           <ThemedText>Single Child</ThemedText>
         </ThemedView>
@@ -203,7 +218,7 @@ describe('ThemedView Component', () => {
     });
 
     it('renders multiple children correctly', () => {
-      const { getByText, getByTestId } = render(
+      const { getByText, getByTestId } = renderWithTheme(
         <ThemedView testID="multi-child-view">
           <ThemedText>First Child</ThemedText>
           <ThemedText>Second Child</ThemedText>
@@ -216,7 +231,7 @@ describe('ThemedView Component', () => {
     });
 
     it('handles empty children', () => {
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView testID="empty-view" />
       );
       
@@ -226,7 +241,7 @@ describe('ThemedView Component', () => {
 
   describe('Layout Behavior', () => {
     it('applies flex layout correctly', () => {
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView 
           testID="flex-view"
           style={{ flex: 1, flexDirection: 'row' }}
@@ -239,7 +254,7 @@ describe('ThemedView Component', () => {
     });
 
     it('handles positioning styles', () => {
-      const { getByTestId } = render(
+      const { getByTestId } = renderWithTheme(
         <ThemedView 
           testID="positioned-view"
           style={{ position: 'absolute', top: 10, left: 10 }}
@@ -255,7 +270,7 @@ describe('ThemedView Component', () => {
   describe('Edge Cases', () => {
     it('handles undefined style gracefully', () => {
       expect(() => {
-        render(
+        renderWithTheme(
           <ThemedView testID="undefined-style" style={undefined}>
             <ThemedText>Content</ThemedText>
           </ThemedView>
@@ -265,7 +280,7 @@ describe('ThemedView Component', () => {
 
     it('handles null style gracefully', () => {
       expect(() => {
-        render(
+        renderWithTheme(
           <ThemedView testID="null-style" style={null}>
             <ThemedText>Content</ThemedText>
           </ThemedView>
@@ -277,7 +292,7 @@ describe('ThemedView Component', () => {
 
 describe('ThemedComponents Integration', () => {
   it('works together in complex layouts', () => {
-    const { getByText, getByTestId } = render(
+    const { getByText, getByTestId } = renderWithTheme(
       <ThemedView testID="container">
         <ThemedText type="title">Main Title</ThemedText>
         <ThemedView testID="content-container">
@@ -297,7 +312,7 @@ describe('ThemedComponents Integration', () => {
   });
 
   it('maintains theme consistency across nested components', () => {
-    const { getByText, getByTestId } = render(
+    const { getByText, getByTestId } = renderWithTheme(
       <ThemedView testID="themed-container" lightColor="#F0F0F0">
         <ThemedText lightColor="#333333">Themed Text</ThemedText>
         <ThemedView testID="nested-view" lightColor="#E0E0E0">
