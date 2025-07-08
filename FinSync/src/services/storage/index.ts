@@ -16,6 +16,7 @@ export { default as BaseDataService } from './BaseDataService';
 export { default as TransactionStorage } from './TransactionStorage';
 export { default as CategoryStorage } from './CategoryStorage';
 export { default as ReceiptStorage } from './ReceiptStorage';
+export { InvestmentService, investmentService } from './InvestmentService';
 
 // System Services
 export { default as DataMigration } from './DataMigration';

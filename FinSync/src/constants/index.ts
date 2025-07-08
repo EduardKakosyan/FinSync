@@ -69,15 +69,18 @@ export const COLORS = {
   SECONDARY: '#5856D6',
   SUCCESS: '#34C759',
   DANGER: '#FF3B30',
+  ERROR: '#FF3B30', // Alias for DANGER
   WARNING: '#FF9500',
   INFO: '#5AC8FA',
   LIGHT: '#F2F2F7',
   DARK: '#1C1C1E',
   BACKGROUND: '#FFFFFF',
   SURFACE: '#F2F2F7',
+  CARD: '#FFFFFF',
   TEXT_PRIMARY: '#000000',
   TEXT_SECONDARY: '#8E8E93',
   BORDER: '#E5E5EA',
+  DIVIDER: '#E5E5EA',
 } as const;
 
 export const FONTS = {

@@ -181,7 +181,8 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
   const updateTransaction = async (input: UpdateTransactionInput): Promise<ApiResponse<Transaction>> => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await enhancedTransactionService.updateTransaction(input);
+      const { id, ...updates } = input;
+      const response = await enhancedTransactionService.updateTransaction(id, updates);
       
       if (response.success && response.data) {
         dispatch({ type: 'UPDATE_TRANSACTION', payload: response.data });
@@ -262,9 +263,10 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({ childr
 
   const searchTransactions = async (query: string): Promise<Transaction[]> => {
     try {
-      const response = await enhancedTransactionService.searchTransactions(query);
+      const searchQuery = { text: query };
+      const response = await enhancedTransactionService.searchTransactions(searchQuery);
       if (response.success && response.data) {
-        return response.data;
+        return response.data.items;
       }
       dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to search transactions' });
       return [];

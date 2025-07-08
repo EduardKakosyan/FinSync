@@ -810,6 +810,115 @@ export class EnhancedTransactionService {
       this.clearCache();
     }
   }
+
+  /**
+   * Get transactions by date range
+   */
+  async getTransactionsByDateRange(
+    startDate: Date,
+    endDate: Date
+  ): Promise<ApiResponse<Transaction[]>> {
+    try {
+      const allTransactions = this.options.useMockData 
+        ? mockDataService.generateMockTransactions(90)
+        : await baseTransactionService.getAll();
+
+      const filteredTransactions = allTransactions.filter(transaction =>
+        transaction.date >= startDate && transaction.date <= endDate
+      );
+
+      return {
+        success: true,
+        data: filteredTransactions,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to get transactions by date range',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Get transactions by category
+   */
+  async getTransactionsByCategory(
+    categoryId: string
+  ): Promise<ApiResponse<Transaction[]>> {
+    try {
+      const allTransactions = this.options.useMockData 
+        ? mockDataService.generateMockTransactions(90)
+        : await baseTransactionService.getAll();
+
+      const filteredTransactions = allTransactions.filter(transaction =>
+        transaction.category === categoryId
+      );
+
+      return {
+        success: true,
+        data: filteredTransactions,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to get transactions by category',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Get transaction statistics
+   */
+  async getTransactionStats(
+    period: TimePeriod = 'month'
+  ): Promise<ApiResponse<{
+    totalTransactions: number;
+    totalIncome: number;
+    totalExpenses: number;
+    netIncome: number;
+    averageDaily: number;
+    categorySummary: Array<{
+      category: string;
+      amount: number;
+      percentage: number;
+      transactionCount: number;
+    }>;
+  }>> {
+    try {
+      const summaryResponse = await this.getSpendingSummary(period);
+      if (!summaryResponse.success || !summaryResponse.data) {
+        return summaryResponse as any;
+      }
+
+      const summary = summaryResponse.data;
+      const categorySummary = summary.spendingData.categoryData.map(category => ({
+        category: category.name,
+        amount: category.amount,
+        percentage: category.percentage,
+        transactionCount: category.transactionCount || 0,
+      }));
+
+      return {
+        success: true,
+        data: {
+          totalTransactions: summary.totalTransactions,
+          totalIncome: summary.totalIncome,
+          totalExpenses: summary.totalExpenses,
+          netIncome: summary.netIncome,
+          averageDaily: summary.averageDaily,
+          categorySummary,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to get transaction stats',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
 }
 
 // Export singleton instance
