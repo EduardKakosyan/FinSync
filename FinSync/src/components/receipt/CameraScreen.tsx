@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: screenHeight > 800 ? 60 : 50, // More padding for larger screens like iPhone 13 Pro
     paddingHorizontal: SPACING.LG,
     paddingBottom: SPACING.MD,
   },
@@ -372,8 +372,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.XL,
   },
   guideline: {
-    width: screenWidth * 0.8,
-    height: screenHeight * 0.4,
+    width: Math.min(screenWidth * 0.8, 312), // 312px for iPhone 13 Pro (390 * 0.8)
+    height: Math.min(screenHeight * 0.4, 337), // 337px for iPhone 13 Pro (844 * 0.4)
     position: 'relative',
   },
   guidelineCorner: {

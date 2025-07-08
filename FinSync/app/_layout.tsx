@@ -34,6 +34,13 @@ export default function RootLayout() {
               presentation: 'modal'
             }} 
           />
+          <Stack.Screen 
+            name="camera" 
+            options={{ 
+              headerShown: false,
+              presentation: 'fullScreenModal'
+            }} 
+          />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

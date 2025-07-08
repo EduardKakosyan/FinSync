@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 
 import { COLORS, SPACING, BORDER_RADIUS } from '@/constants';
 import { cameraService } from '@/services/camera';
@@ -79,28 +80,32 @@ const ReceiptCaptureButton: React.FC<ReceiptCaptureButtonProps> = ({
         return;
       }
 
-      // Capture image
-      const result = await cameraService.captureImage({
-        quality: 0.8,
-        base64: false,
-        exif: true,
-      });
-
-      if (result) {
-        if (onCaptureComplete) {
-          onCaptureComplete(result.uri);
-        } else {
-          // Navigate to receipt scanner with the captured image
-          (navigation as any).navigate('ReceiptScanner', { 
-            capturedImageUri: result.uri 
-          });
+      // Check camera permissions
+      const permissions = await cameraService.getAllPermissions();
+      if (!permissions.camera) {
+        const granted = await cameraService.requestCameraPermissions();
+        if (!granted) {
+          Alert.alert(
+            'Camera Permission Required',
+            'Please allow camera access to scan receipts. You can enable this in Settings.',
+            [{ text: 'OK' }]
+          );
+          return;
         }
       }
+
+      // Navigate to camera screen
+      router.push({
+        pathname: '/camera',
+        params: { 
+          returnPath: onCaptureComplete ? 'callback' : '/(tabs)/add-transaction'
+        }
+      });
     } catch (error) {
-      console.error('Error taking photo:', error);
+      console.error('Error opening camera:', error);
       Alert.alert(
         'Camera Error',
-        'Unable to take photo. Please check camera permissions and try again.',
+        'Unable to open camera. Please check camera permissions and try again.',
         [{ text: 'OK' }]
       );
     } finally {

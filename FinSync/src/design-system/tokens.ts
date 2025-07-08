@@ -215,6 +215,24 @@ export const Spacing = {
   xxl: 48,   // 3rem
   xxxl: 64,  // 4rem
   xxxxl: 96, // 6rem
+  
+  // iPhone 13 Pro specific optimizations (390x844 points)
+  iphone13Pro: {
+    // Screen-aware spacing for 390pt wide screen
+    screenPadding: 16,    // Consistent horizontal padding
+    cardSpacing: 12,      // Spacing between cards
+    sectionSpacing: 20,   // Spacing between sections
+    headerSpacing: 16,    // Header padding
+    contentSpacing: 16,   // Content area padding
+    bottomSafe: 32,       // Bottom safe area for home indicator
+    topSafe: 16,          // Top safe area adjustment
+    
+    // Optimized vertical spacing for 844pt height
+    verticalTight: 8,     // Tight vertical spacing
+    verticalNormal: 16,   // Normal vertical spacing
+    verticalRelaxed: 24,  // Relaxed vertical spacing
+    verticalLoose: 32,    // Loose vertical spacing
+  },
 } as const;
 
 // =============================================================================

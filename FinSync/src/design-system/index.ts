@@ -49,7 +49,8 @@ export {
   ResponsiveLayout,
   SafeScroll,
   useResponsiveValue,
-  useResponsiveDimensions
+  useResponsiveDimensions,
+  useOptimizedSpacing
 } from './components/Layout';
 export type {
   ResponsiveContainerProps,
