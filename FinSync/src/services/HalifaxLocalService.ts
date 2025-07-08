@@ -47,7 +47,7 @@ class HalifaxLocalService {
   private static instance: HalifaxLocalService;
   
   // Current NS HST rate
-  private readonly HST_RATE = 0.15; // 15% HST in Nova Scotia
+  private readonly HST_RATE = 0.14; // 14% HST in Nova Scotia
   
   // Nova Scotia provincial tax brackets (2024)
   private readonly NS_TAX_BRACKETS = [
