@@ -195,6 +195,8 @@ export const useResponsiveDimensions = () => {
     isTablet: dimensions.width >= 768,
     isLargeTablet: dimensions.width >= 1024,
     isPhone: dimensions.width < 768,
+    isIPhone13Pro: dimensions.width === 390 && dimensions.height === 844,
+    isCompactPhone: dimensions.width < 390, // Phones smaller than iPhone 13 Pro
     orientation: dimensions.width > dimensions.height ? 'landscape' : 'portrait',
   };
 };
@@ -208,6 +210,43 @@ export const useResponsiveValue = <T,>(
   const { width: screenWidth } = useResponsiveDimensions();
   const isTablet = screenWidth >= breakpoint;
   return isTablet && tablet !== undefined ? tablet : mobile;
+};
+
+// Hook for iPhone 13 Pro optimized spacing
+export const useOptimizedSpacing = () => {
+  const { isIPhone13Pro, isCompactPhone, width } = useResponsiveDimensions();
+  const tokens = useTokens();
+  
+  if (isIPhone13Pro) {
+    return {
+      screenPadding: tokens.Spacing.iphone13Pro.screenPadding,
+      cardSpacing: tokens.Spacing.iphone13Pro.cardSpacing,
+      sectionSpacing: tokens.Spacing.iphone13Pro.sectionSpacing,
+      headerSpacing: tokens.Spacing.iphone13Pro.headerSpacing,
+      contentSpacing: tokens.Spacing.iphone13Pro.contentSpacing,
+      bottomSafe: tokens.Spacing.iphone13Pro.bottomSafe,
+      topSafe: tokens.Spacing.iphone13Pro.topSafe,
+      verticalTight: tokens.Spacing.iphone13Pro.verticalTight,
+      verticalNormal: tokens.Spacing.iphone13Pro.verticalNormal,
+      verticalRelaxed: tokens.Spacing.iphone13Pro.verticalRelaxed,
+      verticalLoose: tokens.Spacing.iphone13Pro.verticalLoose,
+    };
+  }
+  
+  // Fallback for other devices
+  return {
+    screenPadding: isCompactPhone ? tokens.Spacing.md : tokens.Spacing.lg,
+    cardSpacing: tokens.Spacing.md,
+    sectionSpacing: tokens.Spacing.lg,
+    headerSpacing: tokens.Spacing.lg,
+    contentSpacing: tokens.Spacing.md,
+    bottomSafe: tokens.Spacing.xl,
+    topSafe: tokens.Spacing.md,
+    verticalTight: tokens.Spacing.sm,
+    verticalNormal: tokens.Spacing.md,
+    verticalRelaxed: tokens.Spacing.lg,
+    verticalLoose: tokens.Spacing.xl,
+  };
 };
 
 const styles = StyleSheet.create({
@@ -228,4 +267,5 @@ export default {
   SafeScroll,
   useResponsiveValue,
   useResponsiveDimensions,
+  useOptimizedSpacing,
 };

@@ -2,7 +2,7 @@
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 export interface CameraPermissions {
   camera: boolean;
@@ -141,6 +141,14 @@ export class CameraService {
         }
       }
 
+      // For iOS, we need to make sure the camera is available
+      if (Platform.OS === 'ios') {
+        const isAvailable = await this.isCameraAvailable();
+        if (!isAvailable) {
+          throw new Error('Camera not available');
+        }
+      }
+
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -148,6 +156,11 @@ export class CameraService {
         quality: options.quality || 0.8,
         base64: options.base64 || false,
         exif: options.exif || false,
+        // Add iOS-specific options
+        ...(Platform.OS === 'ios' && {
+          allowsMultipleSelection: false,
+          presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
+        }),
       });
 
       if (result.canceled || !result.assets || result.assets.length === 0) {

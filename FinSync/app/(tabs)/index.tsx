@@ -22,7 +22,8 @@ import {
   Grid,
   Stack,
   SafeScroll,
-  useResponsiveDimensions
+  useResponsiveDimensions,
+  useOptimizedSpacing
 } from "../../src/design-system";
 
 type TimePeriod = "day" | "week" | "month";
@@ -31,6 +32,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const tokens = useTokens();
   const { isTablet } = useResponsiveDimensions();
+  const spacing = useOptimizedSpacing();
   const {
     spendingData,
     selectedPeriod,
@@ -61,23 +63,23 @@ export default function HomeScreen() {
       style={{ 
         borderLeftColor: color, 
         borderLeftWidth: 4,
-        marginBottom: tokens.Spacing.md
+        marginBottom: spacing.cardSpacing
       }}
     >
       <View style={{ 
         flexDirection: 'row', 
         alignItems: 'center', 
-        marginBottom: tokens.Spacing.sm 
+        marginBottom: spacing.verticalTight 
       }}>
         <Ionicons name={icon} size={24} color={color} />
         <Typography 
           variant="label" 
-          style={{ marginLeft: tokens.Spacing.sm }}
+          style={{ marginLeft: spacing.verticalTight }}
         >
           {title}
         </Typography>
       </View>
-      <Amount style={{ color, marginBottom: tokens.Spacing.xs }}>
+      <Amount style={{ color, marginBottom: spacing.verticalTight / 2 }}>
         {formatCurrency(amount)}
       </Amount>
       {subtitle && (
@@ -110,11 +112,11 @@ export default function HomeScreen() {
     <View style={{
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: tokens.Spacing.sm,
+      paddingVertical: spacing.verticalTight,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     }}>
-      <View style={{ marginRight: tokens.Spacing.md }}>
+      <View style={{ marginRight: spacing.verticalNormal }}>
         <Ionicons
           name={transaction.type === "income" ? "add-circle" : "remove-circle"}
           size={20}
@@ -122,7 +124,7 @@ export default function HomeScreen() {
         />
       </View>
       <View style={{ flex: 1 }}>
-        <Typography variant="body" style={{ marginBottom: tokens.Spacing.xs }}>
+        <Typography variant="body" style={{ marginBottom: spacing.verticalTight / 2 }}>
           {transaction.description}
         </Typography>
         <Caption color="secondary">{transaction.category}</Caption>
@@ -142,7 +144,7 @@ export default function HomeScreen() {
     <View style={{
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: tokens.Spacing.sm,
+      paddingVertical: spacing.verticalTight,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     }}>
@@ -152,11 +154,11 @@ export default function HomeScreen() {
           height: 12,
           borderRadius: 6,
           backgroundColor: category.categoryColor,
-          marginRight: tokens.Spacing.md,
+          marginRight: spacing.verticalNormal,
         }}
       />
       <View style={{ flex: 1 }}>
-        <Typography variant="body" style={{ marginBottom: tokens.Spacing.xs }}>
+        <Typography variant="body" style={{ marginBottom: spacing.verticalTight / 2 }}>
           {category.categoryName}
         </Typography>
         <Caption color="secondary">
@@ -189,7 +191,7 @@ export default function HomeScreen() {
       size="large"
       fullWidth
       leftIcon={<Ionicons name="camera" size={24} color={colors.textInverse} />}
-      style={{ marginTop: tokens.Spacing.md }}
+      style={{ marginTop: spacing.verticalNormal }}
     >
       Scan Receipt
     </Button>
@@ -205,14 +207,14 @@ export default function HomeScreen() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          padding: tokens.Spacing.lg,
+          padding: spacing.contentSpacing,
         }}>
           <Ionicons name="alert-circle" size={48} color={colors.error} />
           <BodyText 
             color="secondary" 
             align="center"
             style={{ 
-              marginVertical: tokens.Spacing.md 
+              marginVertical: spacing.verticalNormal 
             }}
           >
             {errorMessage}
@@ -237,7 +239,7 @@ export default function HomeScreen() {
           }
         >
           {/* Header */}
-          <Stack spacing="md" style={{ padding: tokens.Spacing.lg }}>
+          <Stack spacing="md" style={{ padding: spacing.headerSpacing }}>
             <Heading1>FinSync</Heading1>
             <BodyText color="secondary">
               {selectedPeriod === "day" && "Today's Overview"}
@@ -248,8 +250,8 @@ export default function HomeScreen() {
 
           {/* Time Period Selector */}
           <View style={{
-            paddingHorizontal: tokens.Spacing.lg,
-            marginBottom: tokens.Spacing.lg,
+            paddingHorizontal: spacing.screenPadding,
+            marginBottom: spacing.sectionSpacing,
           }}>
             <TimePeriodSelector />
           </View>
@@ -259,7 +261,7 @@ export default function HomeScreen() {
             <View style={{
               justifyContent: 'center',
               alignItems: 'center',
-              padding: tokens.Spacing.lg,
+              padding: spacing.contentSpacing,
               minHeight: 200,
             }}>
               <BodyText color="secondary" align="center">
@@ -268,11 +270,11 @@ export default function HomeScreen() {
             </View>
           ) : spendingData ? (
             /* Spending Cards - Responsive Grid */
-            <View style={{ paddingHorizontal: tokens.Spacing.lg }}>
+            <View style={{ paddingHorizontal: spacing.screenPadding }}>
               <Grid 
                 columns={isTablet ? 3 : 1} 
                 spacing="md"
-                style={{ marginBottom: tokens.Spacing.lg }}
+                style={{ marginBottom: spacing.sectionSpacing }}
               >
                 <SpendingCard
                   title="Total Income"
@@ -303,7 +305,7 @@ export default function HomeScreen() {
 
           {/* Content Grid for Tablet */}
           {isTablet && (categoryBreakdown.length > 0 || recentTransactions.length > 0) ? (
-            <View style={{ paddingHorizontal: tokens.Spacing.lg }}>
+            <View style={{ paddingHorizontal: spacing.screenPadding }}>
               <Grid columns={2} spacing="lg">
                 {/* Spending Breakdown */}
                 {categoryBreakdown.length > 0 && (
@@ -335,7 +337,7 @@ export default function HomeScreen() {
             </View>
           ) : (
             /* Mobile Layout - Stacked */
-            <Stack spacing="lg" style={{ paddingHorizontal: tokens.Spacing.lg }}>
+            <Stack spacing="lg" style={{ paddingHorizontal: spacing.screenPadding }}>
               {/* Spending Breakdown */}
               {categoryBreakdown.length > 0 && (
                 <Stack spacing="md">
@@ -367,8 +369,8 @@ export default function HomeScreen() {
 
           {/* Receipt Capture Button */}
           <View style={{
-            paddingHorizontal: tokens.Spacing.lg,
-            marginTop: tokens.Spacing.lg,
+            paddingHorizontal: spacing.screenPadding,
+            marginTop: spacing.sectionSpacing,
           }}>
             <ReceiptCaptureButton />
           </View>
