@@ -5,7 +5,7 @@ import { useTheme } from '../ThemeProvider';
 export type TypographyVariant = 
   | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
   | 'bodyLarge' | 'body' | 'bodySmall'
-  | 'label' | 'labelSmall' | 'caption'
+  | 'label' | 'labelSmall' | 'labelMedium' | 'caption'
   | 'amount' | 'amountLarge'
   | 'button' | 'buttonSmall';
 
@@ -52,26 +52,28 @@ export const Typography: React.FC<TypographyProps> = ({
       warning: colors.warning,
     };
 
-    // Font family mapping for special variants
-    const getFontFamily = (): string => {
+    // Font family and weight mapping for special variants
+    const getFontStyles = (): { fontFamily: string; fontWeight: any } => {
       if (variant.includes('amount')) {
-        return tokens.Typography.fonts.monospace;
+        return { fontFamily: tokens.Typography.fonts.monospace, fontWeight: '600' };
       }
-      if (variant.includes('button') || variant === 'label' || variant === 'labelSmall') {
-        return tokens.Typography.fonts.primaryMedium;
+      if (variant.includes('button') || variant === 'label' || variant === 'labelSmall' || variant === 'labelMedium') {
+        return { fontFamily: tokens.Typography.fonts.primary, fontWeight: '600' };
       }
       if (variant.startsWith('h')) {
-        return tokens.Typography.fonts.primaryBold;
+        return { fontFamily: tokens.Typography.fonts.primary, fontWeight: 'bold' };
       }
-      return tokens.Typography.fonts.primary;
+      return { fontFamily: tokens.Typography.fonts.primary, fontWeight: 'normal' };
     };
 
+    const fontStyles = getFontStyles();
+    
     return {
       fontSize: variantStyles.fontSize,
       lineHeight: variantStyles.fontSize * variantStyles.lineHeight,
-      fontWeight: variantStyles.fontWeight,
+      fontWeight: fontStyles.fontWeight,
       letterSpacing: variantStyles.letterSpacing,
-      fontFamily: getFontFamily(),
+      fontFamily: fontStyles.fontFamily,
       color: colorMap[color],
       textAlign: align,
     };
