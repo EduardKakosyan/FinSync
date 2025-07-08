@@ -17,7 +17,12 @@ import {
   Heading1,
   BodyText,
   Amount,
-  Caption
+  Caption,
+  ResponsiveContainer,
+  Grid,
+  Stack,
+  SafeScroll,
+  useResponsiveDimensions
 } from "../../src/design-system";
 
 type TimePeriod = "day" | "week" | "month";
@@ -25,6 +30,7 @@ type TimePeriod = "day" | "week" | "month";
 export default function HomeScreen() {
   const colors = useColors();
   const tokens = useTokens();
+  const { isTablet } = useResponsiveDimensions();
   const {
     spendingData,
     selectedPeriod,
@@ -81,15 +87,8 @@ export default function HomeScreen() {
   );
 
   const TimePeriodSelector = () => (
-    <Card 
-      variant="default" 
-      style={{ 
-        marginHorizontal: tokens.Spacing.lg,
-        marginBottom: tokens.Spacing.lg,
-        padding: tokens.Spacing.xs
-      }}
-    >
-      <View style={{ flexDirection: 'row', gap: tokens.Spacing.xs }}>
+    <Card variant="default" padding="xs">
+      <Stack direction="row" spacing="xs">
         {(["day", "week", "month"] as TimePeriod[]).map((period) => (
           <Button
             key={period}
@@ -103,7 +102,7 @@ export default function HomeScreen() {
             {period.charAt(0).toUpperCase() + period.slice(1)}
           </Button>
         ))}
-      </View>
+      </Stack>
     </Card>
   );
 
@@ -231,120 +230,150 @@ export default function HomeScreen() {
       flex: 1, 
       backgroundColor: colors.background 
     }}>
-      <ScrollView
-        style={{ flex: 1 }}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={{
-          padding: tokens.Spacing.lg,
-          paddingBottom: tokens.Spacing.md,
-        }}>
-          <Heading1 style={{ marginBottom: tokens.Spacing.xs }}>
-            FinSync
-          </Heading1>
-          <BodyText color="secondary">
-            {selectedPeriod === "day" && "Today's Overview"}
-            {selectedPeriod === "week" && "This Week's Overview"}
-            {selectedPeriod === "month" && "This Month's Overview"}
-          </BodyText>
-        </View>
-
-        <TimePeriodSelector />
-
-        {isLoading ? (
-          <View style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: tokens.Spacing.lg,
-            minHeight: 200,
-          }}>
-            <BodyText color="secondary" align="center">
-              Loading spending data...
+      <ResponsiveContainer maxWidth={isTablet ? 1024 : undefined}>
+        <SafeScroll
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
+          }
+        >
+          {/* Header */}
+          <Stack spacing="md" style={{ padding: tokens.Spacing.lg }}>
+            <Heading1>FinSync</Heading1>
+            <BodyText color="secondary">
+              {selectedPeriod === "day" && "Today's Overview"}
+              {selectedPeriod === "week" && "This Week's Overview"}
+              {selectedPeriod === "month" && "This Month's Overview"}
             </BodyText>
-          </View>
-        ) : spendingData ? (
-          <View style={{
-            paddingHorizontal: tokens.Spacing.lg,
-            marginBottom: tokens.Spacing.lg,
-          }}>
-            <SpendingCard
-              title="Total Income"
-              amount={spendingData.totalIncome}
-              subtitle={`Daily avg: ${formatCurrency(spendingData.dailyAverage)}`}
-              color={colors.success}
-              icon="trending-up"
-            />
-            <SpendingCard
-              title="Total Expenses"
-              amount={spendingData.totalExpenses}
-              color={colors.error}
-              icon="trending-down"
-            />
-            <SpendingCard
-              title="Net Income"
-              amount={spendingData.netIncome}
-              color={spendingData.netIncome >= 0 ? colors.success : colors.error}
-              icon={
-                spendingData.netIncome >= 0
-                  ? "checkmark-circle"
-                  : "alert-circle"
-              }
-            />
-          </View>
-        ) : null}
+          </Stack>
 
-        {categoryBreakdown.length > 0 && (
+          {/* Time Period Selector */}
           <View style={{
             paddingHorizontal: tokens.Spacing.lg,
             marginBottom: tokens.Spacing.lg,
           }}>
-            <Typography 
-              variant="h3" 
-              style={{ marginBottom: tokens.Spacing.md }}
-            >
-              Spending Breakdown
-            </Typography>
-            <Card variant="default">
-              {categoryBreakdown.slice(0, 5).map((category) => (
-                <CategoryItem key={category.categoryId} category={category} />
-              ))}
-            </Card>
+            <TimePeriodSelector />
           </View>
-        )}
 
-        {recentTransactions.length > 0 && (
-          <View style={{
-            paddingHorizontal: tokens.Spacing.lg,
-            marginBottom: tokens.Spacing.lg,
-          }}>
-            <Typography 
-              variant="h3" 
-              style={{ marginBottom: tokens.Spacing.md }}
-            >
-              Recent Transactions
-            </Typography>
-            <Card variant="default">
-              {recentTransactions.slice(0, 5).map((transaction) => (
-                <TransactionItem
-                  key={transaction.id}
-                  transaction={transaction}
+          {/* Loading State */}
+          {isLoading ? (
+            <View style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: tokens.Spacing.lg,
+              minHeight: 200,
+            }}>
+              <BodyText color="secondary" align="center">
+                Loading spending data...
+              </BodyText>
+            </View>
+          ) : spendingData ? (
+            /* Spending Cards - Responsive Grid */
+            <View style={{ paddingHorizontal: tokens.Spacing.lg }}>
+              <Grid 
+                columns={isTablet ? 3 : 1} 
+                spacing="md"
+                style={{ marginBottom: tokens.Spacing.lg }}
+              >
+                <SpendingCard
+                  title="Total Income"
+                  amount={spendingData.totalIncome}
+                  subtitle={`Daily avg: ${formatCurrency(spendingData.dailyAverage)}`}
+                  color={colors.success}
+                  icon="trending-up"
                 />
-              ))}
-            </Card>
-          </View>
-        )}
+                <SpendingCard
+                  title="Total Expenses"
+                  amount={spendingData.totalExpenses}
+                  color={colors.error}
+                  icon="trending-down"
+                />
+                <SpendingCard
+                  title="Net Income"
+                  amount={spendingData.netIncome}
+                  color={spendingData.netIncome >= 0 ? colors.success : colors.error}
+                  icon={
+                    spendingData.netIncome >= 0
+                      ? "checkmark-circle"
+                      : "alert-circle"
+                  }
+                />
+              </Grid>
+            </View>
+          ) : null}
 
-        <View style={{
-          paddingHorizontal: tokens.Spacing.lg,
-          marginBottom: tokens.Spacing.lg,
-        }}>
-          <ReceiptCaptureButton />
-        </View>
-      </ScrollView>
+          {/* Content Grid for Tablet */}
+          {isTablet && (categoryBreakdown.length > 0 || recentTransactions.length > 0) ? (
+            <View style={{ paddingHorizontal: tokens.Spacing.lg }}>
+              <Grid columns={2} spacing="lg">
+                {/* Spending Breakdown */}
+                {categoryBreakdown.length > 0 && (
+                  <Stack spacing="md">
+                    <Typography variant="h3">Spending Breakdown</Typography>
+                    <Card variant="default">
+                      {categoryBreakdown.slice(0, 5).map((category) => (
+                        <CategoryItem key={category.categoryId} category={category} />
+                      ))}
+                    </Card>
+                  </Stack>
+                )}
+
+                {/* Recent Transactions */}
+                {recentTransactions.length > 0 && (
+                  <Stack spacing="md">
+                    <Typography variant="h3">Recent Transactions</Typography>
+                    <Card variant="default">
+                      {recentTransactions.slice(0, 5).map((transaction) => (
+                        <TransactionItem
+                          key={transaction.id}
+                          transaction={transaction}
+                        />
+                      ))}
+                    </Card>
+                  </Stack>
+                )}
+              </Grid>
+            </View>
+          ) : (
+            /* Mobile Layout - Stacked */
+            <Stack spacing="lg" style={{ paddingHorizontal: tokens.Spacing.lg }}>
+              {/* Spending Breakdown */}
+              {categoryBreakdown.length > 0 && (
+                <Stack spacing="md">
+                  <Typography variant="h3">Spending Breakdown</Typography>
+                  <Card variant="default">
+                    {categoryBreakdown.slice(0, 5).map((category) => (
+                      <CategoryItem key={category.categoryId} category={category} />
+                    ))}
+                  </Card>
+                </Stack>
+              )}
+
+              {/* Recent Transactions */}
+              {recentTransactions.length > 0 && (
+                <Stack spacing="md">
+                  <Typography variant="h3">Recent Transactions</Typography>
+                  <Card variant="default">
+                    {recentTransactions.slice(0, 5).map((transaction) => (
+                      <TransactionItem
+                        key={transaction.id}
+                        transaction={transaction}
+                      />
+                    ))}
+                  </Card>
+                </Stack>
+              )}
+            </Stack>
+          )}
+
+          {/* Receipt Capture Button */}
+          <View style={{
+            paddingHorizontal: tokens.Spacing.lg,
+            marginTop: tokens.Spacing.lg,
+          }}>
+            <ReceiptCaptureButton />
+          </View>
+        </SafeScroll>
+      </ResponsiveContainer>
     </SafeAreaView>
   );
 }
