@@ -67,12 +67,12 @@ const SmartAmountInput: React.FC<SmartAmountInputProps> = ({
   const allQuickAmounts: QuickAmount[] = [
     ...recentAmounts.slice(0, 3).map(amount => ({
       amount,
-      label: formatCurrency(amount, currency, { showCurrencySymbol: false }),
+      label: formatCurrency(amount, currency, false),
       type: 'recent' as const,
     })),
     ...suggestedAmounts.slice(0, 2).map(amount => ({
       amount,
-      label: formatCurrency(amount, currency, { showCurrencySymbol: false }),
+      label: formatCurrency(amount, currency, false),
       type: 'suggested' as const,
     })),
     ...quickAmounts.filter(qa => 
@@ -103,7 +103,10 @@ const SmartAmountInput: React.FC<SmartAmountInputProps> = ({
 
   const handleFocus = useCallback(() => {
     setIsFocused(true);
-    setShowQuickAmounts(true);
+    // Don't show quick amounts on iOS to avoid focus conflicts
+    if (Platform.OS !== 'ios') {
+      setShowQuickAmounts(true);
+    }
     onFocus?.();
     
     // Gentle haptic feedback
@@ -173,6 +176,54 @@ const SmartAmountInput: React.FC<SmartAmountInputProps> = ({
     }
   };
 
+  // Simplified iOS version to avoid RemoteTextInput errors
+  if (Platform.OS === 'ios') {
+    return (
+      <View style={styles.container}>
+        <View style={[
+          styles.inputContainer,
+          isFocused && styles.inputContainerFocused,
+          error && styles.inputContainerError,
+          disabled && styles.inputContainerDisabled,
+        ]}>
+          <Text style={[
+            styles.currencySymbol,
+            { color: getAmountColor() },
+          ]}>
+            {currencySymbol}
+          </Text>
+          
+          <TextInput
+            style={[
+              styles.amountInput,
+              { color: getAmountColor() },
+            ]}
+            value={value}
+            onChangeText={onChangeText}
+            onFocus={() => { setIsFocused(true); onFocus?.(); }}
+            onBlur={() => { setIsFocused(false); onBlur?.(); }}
+            placeholder={placeholder}
+            placeholderTextColor={COLORS.TEXT_SECONDARY}
+            keyboardType="decimal-pad"
+            editable={!disabled}
+            maxLength={12}
+            returnKeyType="done"
+            autoCorrect={false}
+            autoCapitalize="none"
+            spellCheck={false}
+          />
+        </View>
+        
+        {error && (
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle" size={14} color={COLORS.DANGER} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {/* Main Amount Input */}
@@ -203,8 +254,13 @@ const SmartAmountInput: React.FC<SmartAmountInputProps> = ({
           keyboardType="decimal-pad"
           autoFocus={autoFocus}
           editable={!disabled}
-          selectTextOnFocus
+          selectTextOnFocus={true}
           maxLength={12}
+          returnKeyType="done"
+          blurOnSubmit={true}
+          autoCorrect={false}
+          autoCapitalize="none"
+          spellCheck={false}
         />
         
         {/* Amount Validation Indicator */}

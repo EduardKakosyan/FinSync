@@ -299,7 +299,7 @@ const AdvancedAddTransactionScreen: React.FC = () => {
                 transactionType={formData.type}
                 error={errors.amount}
                 recentAmounts={recentAmounts}
-                autoFocus
+                autoFocus={false}
               />
             </View>
 
