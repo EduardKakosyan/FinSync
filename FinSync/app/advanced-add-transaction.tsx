@@ -18,10 +18,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { COLORS, SPACING, FONTS } from '../src/constants';
 import { CreateTransactionInput } from '../src/types';
 import SmartAmountInput from '../src/components/transaction/SmartAmountInput';
 import { formatCurrency, parseAmountFromInput } from '../src/utils/currencyUtils';
+import {
+  Typography,
+  Card,
+  Button,
+  useColors,
+  useTokens,
+  Heading2,
+  BodyText,
+  Caption,
+  Label
+} from '../src/design-system';
 
 interface FormData {
   amount: string;
