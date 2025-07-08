@@ -10,6 +10,7 @@ import {
   StatusBar,
   Dimensions,
   Animated,
+  Platform,
 } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +37,8 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
   const [facing, setFacing] = useState<CameraType>('back');
   const [focusAnimation] = useState(new Animated.Value(0));
   const [guidelineOpacity] = useState(new Animated.Value(0.7));
+  const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null);
+  const [tapToFocusAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
     if (!permission?.granted) {
@@ -75,6 +78,28 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
         }),
       ])
     ).start();
+  };
+
+  const handleTapToFocus = (event: any) => {
+    const { locationX, locationY } = event.nativeEvent;
+    setFocusPoint({ x: locationX, y: locationY });
+    
+    // Animate the tap-to-focus indicator
+    Animated.sequence([
+      Animated.timing(tapToFocusAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(tapToFocusAnimation, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Clear focus point after animation
+      setTimeout(() => setFocusPoint(null), 500);
+    });
   };
 
   const handleCapture = async () => {
@@ -188,6 +213,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
         style={styles.camera}
         facing={facing}
         flash={flashMode}
+        onTouchStart={handleTapToFocus}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -217,7 +243,7 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
           </Animated.View>
           
           <Text style={styles.guidelineText}>
-            Position receipt within the frame
+            Position receipt within the frame{Platform.OS === 'ios' ? '\n(iPhone 13 Pro: Keep 16-19cm away, tap to focus)' : ''}
           </Text>
         </View>
 
@@ -238,6 +264,28 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
             },
           ]}
         />
+
+        {/* Tap-to-Focus Indicator */}
+        {focusPoint && (
+          <Animated.View
+            style={[
+              styles.tapToFocusIndicator,
+              {
+                left: focusPoint.x - 30,
+                top: focusPoint.y - 30,
+                opacity: tapToFocusAnimation,
+                transform: [
+                  {
+                    scale: tapToFocusAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1.5, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
+        )}
 
         {/* Bottom Controls */}
         <View style={styles.controls}>
@@ -278,7 +326,9 @@ const CameraScreen: React.FC<CameraScreenProps> = ({ onCapture, onCancel }) => {
               onPress={() => {
                 Alert.alert(
                   'Scanning Tips',
-                  '• Ensure good lighting\n• Keep receipt flat\n• Align receipt within guidelines\n• Avoid shadows and glare\n• Make sure text is readable',
+                  Platform.OS === 'ios' 
+                    ? '• iPhone 13 Pro: Keep receipts 16-19cm away\n• Tap screen to focus on specific areas\n• Ensure good lighting\n• Keep receipt flat\n• Align receipt within guidelines\n• Avoid shadows and glare\n• Make sure text is readable'
+                    : '• Ensure good lighting\n• Keep receipt flat\n• Align receipt within guidelines\n• Avoid shadows and glare\n• Make sure text is readable',
                   [{ text: 'Got it' }]
                 );
               }}
@@ -433,6 +483,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'white',
     borderRadius: 50,
+  },
+  tapToFocusIndicator: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderWidth: 2,
+    borderColor: '#00FF00',
+    borderRadius: 30,
+    backgroundColor: 'rgba(0, 255, 0, 0.1)',
   },
   controls: {
     position: 'absolute',

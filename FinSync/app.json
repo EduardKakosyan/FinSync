@@ -25,9 +25,10 @@
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.FinSync",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -66,9 +67,15 @@
     "developmentClient": {
       "silentLaunch": false
     },
+    "cli": {
+      "appVersionSource": "remote"
+    },
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "a832fcc8-b22d-4bfc-834f-65f6d2aca19b"
       }
     }
   }
