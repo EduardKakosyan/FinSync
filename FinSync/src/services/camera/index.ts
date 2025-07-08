@@ -2,7 +2,7 @@
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, Linking } from 'react-native';
 
 export interface CameraPermissions {
   camera: boolean;
@@ -35,14 +35,38 @@ export class CameraService {
   }
 
   /**
-   * Request camera permissions
+   * Request camera permissions with enhanced error handling
    */
   async requestCameraPermissions(): Promise<boolean> {
     try {
       const { status } = await Camera.requestCameraPermissionsAsync();
-      return status === 'granted';
+      
+      if (status === 'granted') {
+        return true;
+      }
+      
+      // Enhanced error handling for iPhone 13 Pro users
+      if (Platform.OS === 'ios' && status === 'denied') {
+        Alert.alert(
+          'Camera Permission Required',
+          'iPhone 13 Pro users: Camera access is required for receipt scanning. Please enable in Settings.',
+          [
+            { text: 'Cancel' },
+            { text: 'Settings', onPress: () => Linking.openSettings() },
+            { text: 'Camera Tips', onPress: this.showIPhone13ProTips }
+          ]
+        );
+      }
+      
+      return false;
     } catch (error) {
       console.error('Error requesting camera permissions:', error);
+      
+      // Enhanced error logging for iPhone 13 Pro
+      if (Platform.OS === 'ios') {
+        console.warn('iPhone 13 Pro camera permission error:', error);
+      }
+      
       return false;
     }
   }
@@ -129,7 +153,20 @@ export class CameraService {
   }
 
   /**
-   * Capture image from camera
+   * Show iPhone 13 Pro specific tips
+   */
+  private showIPhone13ProTips = () => {
+    if (Platform.OS === 'ios') {
+      Alert.alert(
+        'iPhone 13 Pro Camera Tips',
+        '• Keep subjects at least 16-19cm away from camera\n• Use good lighting for better focus\n• Tap to focus on specific areas\n• Clean your camera lens\n• Try portrait mode for better depth detection\n• If focus issues persist, restart the app',
+        [{ text: 'Got it' }]
+      );
+    }
+  };
+
+  /**
+   * Capture image from camera with iPhone 13 Pro optimizations
    */
   async captureImage(options: CaptureOptions = {}): Promise<CapturedImage | null> {
     try {
@@ -145,7 +182,7 @@ export class CameraService {
       if (Platform.OS === 'ios') {
         const isAvailable = await this.isCameraAvailable();
         if (!isAvailable) {
-          throw new Error('Camera not available');
+          throw new Error('Camera not available on this device');
         }
       }
 
@@ -156,10 +193,12 @@ export class CameraService {
         quality: options.quality || 0.8,
         base64: options.base64 || false,
         exif: options.exif || false,
-        // Add iOS-specific options
+        // Enhanced iOS-specific options for iPhone 13 Pro
         ...(Platform.OS === 'ios' && {
           allowsMultipleSelection: false,
           presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
+          // Additional optimizations for iPhone 13 Pro
+          preferredAssetRepresentationMode: ImagePicker.AssetRepresentationMode.COMPATIBLE,
         }),
       });
 
@@ -168,6 +207,12 @@ export class CameraService {
       }
 
       const asset = result.assets[0];
+      
+      // Enhanced validation for iPhone 13 Pro
+      if (Platform.OS === 'ios' && (!asset.width || !asset.height)) {
+        console.warn('iPhone 13 Pro: Image dimensions missing, may indicate capture issue');
+      }
+      
       return {
         uri: asset.uri,
         width: asset.width || 0,
@@ -177,6 +222,32 @@ export class CameraService {
       };
     } catch (error) {
       console.error('Error capturing image:', error);
+      
+      // Enhanced error handling for iPhone 13 Pro
+      if (Platform.OS === 'ios') {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        if (errorMessage.includes('focus') || errorMessage.includes('blur')) {
+          Alert.alert(
+            'Camera Focus Issue',
+            'iPhone 13 Pro users: Try moving your subject further away (16-19cm minimum) or ensure better lighting.',
+            [
+              { text: 'OK' },
+              { text: 'Camera Tips', onPress: this.showIPhone13ProTips }
+            ]
+          );
+        } else if (errorMessage.includes('permission')) {
+          Alert.alert(
+            'Camera Permission Issue',
+            'Please enable camera permissions in Settings > FinSync > Camera',
+            [
+              { text: 'Cancel' },
+              { text: 'Settings', onPress: () => Linking.openSettings() }
+            ]
+          );
+        }
+      }
+      
       throw error;
     }
   }

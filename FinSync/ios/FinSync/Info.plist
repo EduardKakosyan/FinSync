@@ -31,6 +31,12 @@
           <string>com.anonymous.FinSync</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>exp+finsync</string>
+        </array>
+      </dict>
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
@@ -46,13 +52,11 @@
       <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>FinSync needs camera access to scan receipts and capture transaction photos for automatic data extraction.</string>
+    <string>The app accesses your camera to let you scan receipts.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>FinSync needs microphone access for video recording features.</string>
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>FinSync needs photo library access to save captured receipt photos to your device.</string>
+    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>FinSync needs photo library access to select existing receipt photos from your device for scanning.</string>
+    <string>The app accesses your photos to let you select receipt images.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
