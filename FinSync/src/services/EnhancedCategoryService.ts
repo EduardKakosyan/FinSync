@@ -660,6 +660,41 @@ export class EnhancedCategoryService {
   }
 
   /**
+   * Get categories filtered by type
+   */
+  async getCategoriesByType(type: 'income' | 'expense'): Promise<ApiResponse<Category[]>> {
+    try {
+      const allCategories = await baseCategoryService.getAll();
+      const filteredCategories = allCategories.filter(category => category.type === type);
+      
+      return {
+        success: true,
+        data: filteredCategories,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Failed to get categories by type',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Get a random color (alias for generateRandomColor)
+   */
+  getRandomColor(): string {
+    return this.generateRandomColor();
+  }
+
+  /**
+   * Get available category colors
+   */
+  getCategoryColors(): string[] {
+    return this.getColorPalette('all');
+  }
+
+  /**
    * Validate category
    */
   validateCategory(
