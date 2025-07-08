@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>finsync</string>
+          <string>com.anonymous.FinSync</string>
           <string>com.anonymous.FinSync</string>
         </array>
       </dict>
@@ -55,6 +55,8 @@
     <string>The app accesses your camera to let you scan receipts.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to save photos</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>The app accesses your photos to let you select receipt images.</string>
     <key>NSUserActivityTypes</key>
