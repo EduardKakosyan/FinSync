@@ -26,6 +26,7 @@ export interface ButtonProps {
   testID?: string;
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  accessibilityState?: { selected?: boolean; disabled?: boolean; busy?: boolean };
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
 }
@@ -43,6 +44,7 @@ export const Button: React.FC<ButtonProps> = ({
   testID,
   accessibilityLabel,
   accessibilityHint,
+  accessibilityState,
   leftIcon,
   rightIcon,
 }) => {
@@ -183,6 +185,7 @@ export const Button: React.FC<ButtonProps> = ({
       accessibilityState={{
         disabled: disabled || loading,
         busy: loading,
+        ...accessibilityState,
       }}
     >
       {showLoadingSpinner && (
