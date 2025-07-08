@@ -1,25 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ScrollView,
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-import { COLORS, SPACING, FONTS } from '../../src/constants';
+import {
+  Typography,
+  Card,
+  Button,
+  useColors,
+  useTokens,
+  Heading2,
+  BodyText,
+  Caption,
+  Label
+} from '../../src/design-system';
 import TransactionTemplates from '../../src/components/transaction/TransactionTemplates';
-import { CreateTransactionInput, Transaction } from '../../src/types';
-import { enhancedTransactionService } from '../../src/services/EnhancedTransactionService';
+import { CreateTransactionInput } from '../../src/types';
 
 const AddTransactionScreen = () => {
+  const colors = useColors();
+  const tokens = useTokens();
   const [showTemplates, setShowTemplates] = useState(false);
 
   const handleUseAdvancedForm = () => {
-    // For now, we'll navigate to a simple form since we're using Expo Router
     router.push('/advanced-add-transaction');
   };
 
@@ -40,169 +47,266 @@ const AddTransactionScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ 
+      flex: 1, 
+      backgroundColor: colors.background 
+    }}>
       <ScrollView>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <Ionicons name="add-circle" size={24} color={COLORS.PRIMARY} />
-            <Text style={styles.title}>Add Transaction</Text>
+        {/* Header */}
+        <View style={{
+          padding: tokens.Spacing.lg,
+          alignItems: 'center',
+          backgroundColor: colors.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: tokens.Spacing.sm,
+            marginBottom: tokens.Spacing.sm,
+          }}>
+            <Ionicons name="add-circle" size={24} color={colors.primary} />
+            <Heading2>Add Transaction</Heading2>
           </View>
-          <Text style={styles.subtitle}>
-            Choose how you'd like to add your transaction
-          </Text>
+          <BodyText color="secondary" align="center">
+            Choose how you&apos;d like to add your transaction
+          </BodyText>
         </View>
 
-        <View style={styles.options}>
-          {/* Advanced Form Option */}
-          <TouchableOpacity
-            style={styles.optionCard}
+        <View style={{ padding: tokens.Spacing.md }}>
+          {/* Smart Entry Form */}
+          <Card 
+            variant="default" 
             onPress={handleUseAdvancedForm}
+            style={{ marginBottom: tokens.Spacing.lg }}
           >
-            <View style={styles.optionHeader}>
-              <View style={[styles.optionIcon, { backgroundColor: COLORS.PRIMARY }]}>
-                <Ionicons name="sparkles" size={24} color="white" />
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: tokens.Spacing.md,
+            }}>
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: colors.primary,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Ionicons name="sparkles" size={24} color={colors.textInverse} />
               </View>
-              <View style={styles.aiIndicator}>
-                <Text style={styles.aiText}>AI Powered</Text>
+              <View style={{
+                backgroundColor: colors.warning + '20',
+                paddingHorizontal: tokens.Spacing.sm,
+                paddingVertical: 4,
+                borderRadius: 12,
+              }}>
+                <Caption style={{ 
+                  fontWeight: 'bold', 
+                  color: colors.warning 
+                }}>
+                  AI Powered
+                </Caption>
               </View>
             </View>
-            <Text style={styles.optionTitle}>Smart Entry Form</Text>
-            <Text style={styles.optionDescription}>
+            <Typography variant="h4" style={{ marginBottom: tokens.Spacing.sm }}>
+              Smart Entry Form
+            </Typography>
+            <BodyText color="secondary" style={{ marginBottom: tokens.Spacing.md }}>
               Use our intelligent form with smart suggestions, category matching, and auto-completion
-            </Text>
-            <View style={styles.optionFeatures}>
-              <View style={styles.feature}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.SUCCESS} />
-                <Text style={styles.featureText}>Smart amount suggestions</Text>
-              </View>
-              <View style={styles.feature}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.SUCCESS} />
-                <Text style={styles.featureText}>Intelligent category matching</Text>
-              </View>
-              <View style={styles.feature}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.SUCCESS} />
-                <Text style={styles.featureText}>Recent transaction insights</Text>
-              </View>
+            </BodyText>
+            <View style={{ gap: tokens.Spacing.sm }}>
+              {[
+                'Smart amount suggestions',
+                'Intelligent category matching',
+                'Recent transaction insights'
+              ].map((feature, index) => (
+                <View key={index} style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: tokens.Spacing.sm,
+                }}>
+                  <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+                  <Caption>{feature}</Caption>
+                </View>
+              ))}
             </View>
-          </TouchableOpacity>
+          </Card>
 
-          {/* Quick Entry Options */}
-          <View style={styles.quickOptions}>
-            <Text style={styles.sectionTitle}>Quick Entry</Text>
+          {/* Quick Entry */}
+          <View style={{ marginBottom: tokens.Spacing.lg }}>
+            <Label style={{ marginBottom: tokens.Spacing.sm }}>
+              Quick Entry
+            </Label>
             
-            <View style={styles.quickButtonsRow}>
-              <TouchableOpacity
-                style={[styles.quickButton, { backgroundColor: COLORS.DANGER }]}
+            <View style={{
+              flexDirection: 'row',
+              gap: tokens.Spacing.md,
+            }}>
+              <Button
+                variant="destructive"
+                size="large"
+                style={{ flex: 1 }}
+                leftIcon={<Ionicons name="remove-circle" size={20} color={colors.textInverse} />}
                 onPress={() => handleQuickTransaction('expense')}
               >
-                <Ionicons name="remove-circle" size={20} color="white" />
-                <Text style={styles.quickButtonText}>Expense</Text>
-              </TouchableOpacity>
+                Expense
+              </Button>
               
-              <TouchableOpacity
-                style={[styles.quickButton, { backgroundColor: COLORS.SUCCESS }]}
+              <Button
+                variant="primary"
+                size="large"
+                style={{ 
+                  flex: 1,
+                  backgroundColor: colors.success
+                }}
+                leftIcon={<Ionicons name="add-circle" size={20} color={colors.textInverse} />}
                 onPress={() => handleQuickTransaction('income')}
               >
-                <Ionicons name="add-circle" size={20} color="white" />
-                <Text style={styles.quickButtonText}>Income</Text>
-              </TouchableOpacity>
+                Income
+              </Button>
             </View>
           </View>
 
-          {/* Templates Option */}
-          <TouchableOpacity
-            style={styles.templateCard}
+          {/* Templates */}
+          <Card 
+            variant="default" 
             onPress={() => setShowTemplates(true)}
+            style={{ marginBottom: tokens.Spacing.lg }}
           >
-            <View style={styles.templateHeader}>
-              <View style={[styles.optionIcon, { backgroundColor: COLORS.INFO }]}>
-                <Ionicons name="bookmark" size={24} color="white" />
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: tokens.Spacing.md,
+              marginBottom: tokens.Spacing.sm,
+            }}>
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: colors.info,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Ionicons name="bookmark" size={24} color={colors.textInverse} />
               </View>
-              <Text style={styles.templateTitle}>Use Template</Text>
+              <Label>Use Template</Label>
             </View>
-            <Text style={styles.templateDescription}>
+            <Caption color="secondary" style={{ marginBottom: tokens.Spacing.md }}>
               Choose from saved templates for recurring transactions
-            </Text>
-            <View style={styles.templatePreview}>
-              <View style={styles.previewItem}>
-                <Ionicons name="cafe" size={14} color={COLORS.WARNING} />
-                <Text style={styles.previewText}>Coffee - $5.50</Text>
-              </View>
-              <View style={styles.previewItem}>
-                <Ionicons name="car" size={14} color={COLORS.INFO} />
-                <Text style={styles.previewText}>Gas - $60.00</Text>
-              </View>
-              <View style={styles.previewItem}>
-                <Ionicons name="restaurant" size={14} color={COLORS.SUCCESS} />
-                <Text style={styles.previewText}>Lunch - $15.00</Text>
-              </View>
+            </Caption>
+            <View style={{ gap: tokens.Spacing.sm }}>
+              {[
+                { icon: 'cafe', text: 'Coffee - $5.50', color: colors.warning },
+                { icon: 'car', text: 'Gas - $60.00', color: colors.info },
+                { icon: 'restaurant', text: 'Lunch - $15.00', color: colors.success }
+              ].map((item, index) => (
+                <View key={index} style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: tokens.Spacing.sm,
+                }}>
+                  <Ionicons name={item.icon as any} size={14} color={item.color} />
+                  <Caption color="secondary">{item.text}</Caption>
+                </View>
+              ))}
             </View>
-          </TouchableOpacity>
+          </Card>
 
           {/* Recent Transactions */}
-          <View style={styles.recentSection}>
-            <Text style={styles.sectionTitle}>Recent Transactions</Text>
-            <Text style={styles.sectionSubtitle}>
+          <View style={{ marginBottom: tokens.Spacing.lg }}>
+            <Label style={{ marginBottom: tokens.Spacing.sm }}>
+              Recent Transactions
+            </Label>
+            <Caption color="secondary" style={{ marginBottom: tokens.Spacing.md }}>
               Tap to create a similar transaction
-            </Text>
+            </Caption>
             
-            <View style={styles.recentList}>
-              <TouchableOpacity
-                style={styles.recentItem}
-                onPress={() => handleSelectTemplate({
+            <View style={{ gap: tokens.Spacing.sm }}>
+              {[
+                {
+                  icon: 'cafe',
                   description: 'Starbucks Coffee',
+                  category: 'Food & Dining',
+                  time: 'Yesterday',
                   amount: 5.50,
-                  category: 'Food & Dining',
-                  type: 'expense',
-                })}
-              >
-                <View style={styles.recentIcon}>
-                  <Ionicons name="cafe" size={16} color={COLORS.WARNING} />
-                </View>
-                <View style={styles.recentInfo}>
-                  <Text style={styles.recentDescription}>Starbucks Coffee</Text>
-                  <Text style={styles.recentDetails}>Food & Dining • Yesterday</Text>
-                </View>
-                <Text style={styles.recentAmount}>$5.50</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.recentItem}
-                onPress={() => handleSelectTemplate({
+                  color: colors.warning,
+                  template: {
+                    description: 'Starbucks Coffee',
+                    amount: 5.50,
+                    category: 'Food & Dining',
+                    type: 'expense' as const,
+                  }
+                },
+                {
+                  icon: 'basket',
                   description: 'Groceries',
-                  amount: 127.50,
                   category: 'Food & Dining',
-                  type: 'expense',
-                })}
-              >
-                <View style={styles.recentIcon}>
-                  <Ionicons name="basket" size={16} color={COLORS.SUCCESS} />
-                </View>
-                <View style={styles.recentInfo}>
-                  <Text style={styles.recentDescription}>Groceries</Text>
-                  <Text style={styles.recentDetails}>Food & Dining • 2 days ago</Text>
-                </View>
-                <Text style={styles.recentAmount}>$127.50</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.recentItem}
-                onPress={() => handleSelectTemplate({
+                  time: '2 days ago',
+                  amount: 127.50,
+                  color: colors.success,
+                  template: {
+                    description: 'Groceries',
+                    amount: 127.50,
+                    category: 'Food & Dining',
+                    type: 'expense' as const,
+                  }
+                },
+                {
+                  icon: 'car',
                   description: 'Gas Station',
-                  amount: 58.20,
                   category: 'Transportation',
-                  type: 'expense',
-                })}
-              >
-                <View style={styles.recentIcon}>
-                  <Ionicons name="car" size={16} color={COLORS.INFO} />
-                </View>
-                <View style={styles.recentInfo}>
-                  <Text style={styles.recentDescription}>Gas Station</Text>
-                  <Text style={styles.recentDetails}>Transportation • 3 days ago</Text>
-                </View>
-                <Text style={styles.recentAmount}>$58.20</Text>
-              </TouchableOpacity>
+                  time: '3 days ago',
+                  amount: 58.20,
+                  color: colors.info,
+                  template: {
+                    description: 'Gas Station',
+                    amount: 58.20,
+                    category: 'Transportation',
+                    type: 'expense' as const,
+                  }
+                }
+              ].map((item, index) => (
+                <Card
+                  key={index}
+                  variant="outlined"
+                  onPress={() => handleSelectTemplate(item.template)}
+                  style={{ padding: tokens.Spacing.md }}
+                >
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}>
+                    <View style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: colors.surfaceElevated,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: tokens.Spacing.md,
+                    }}>
+                      <Ionicons name={item.icon as any} size={16} color={item.color} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Typography variant="labelSmall" style={{ fontWeight: '600' }}>
+                        {item.description}
+                      </Typography>
+                      <Caption color="secondary" style={{ marginTop: 2 }}>
+                        {item.category} • {item.time}
+                      </Caption>
+                    </View>
+                    <Typography variant="labelSmall" style={{ 
+                      fontWeight: '600',
+                      color: colors.error
+                    }}>
+                      ${item.amount.toFixed(2)}
+                    </Typography>
+                  </View>
+                </Card>
+              ))}
             </View>
           </View>
         </View>
@@ -217,219 +321,5 @@ const AddTransactionScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
-  },
-  header: {
-    padding: SPACING.LG,
-    alignItems: 'center',
-    backgroundColor: COLORS.SURFACE,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.SM,
-    marginBottom: SPACING.SM,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.BOLD,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    textAlign: 'center',
-  },
-  options: {
-    padding: SPACING.MD,
-  },
-  optionCard: {
-    backgroundColor: COLORS.SURFACE,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    borderRadius: 16,
-    padding: SPACING.LG,
-    marginBottom: SPACING.LG,
-  },
-  optionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.MD,
-  },
-  optionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  aiIndicator: {
-    backgroundColor: '#FFF8E1',
-    paddingHorizontal: SPACING.SM,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  aiText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: COLORS.WARNING,
-    fontFamily: FONTS.BOLD,
-  },
-  optionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.BOLD,
-    marginBottom: SPACING.SM,
-  },
-  optionDescription: {
-    fontSize: 16,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    lineHeight: 22,
-    marginBottom: SPACING.MD,
-  },
-  optionFeatures: {
-    gap: SPACING.SM,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.SM,
-  },
-  featureText: {
-    fontSize: 14,
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.REGULAR,
-  },
-  quickOptions: {
-    marginBottom: SPACING.LG,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.SEMIBOLD,
-    marginBottom: SPACING.SM,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    marginBottom: SPACING.MD,
-  },
-  quickButtonsRow: {
-    flexDirection: 'row',
-    gap: SPACING.MD,
-  },
-  quickButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-    borderRadius: 12,
-    gap: SPACING.SM,
-  },
-  quickButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-    fontFamily: FONTS.SEMIBOLD,
-  },
-  templateCard: {
-    backgroundColor: COLORS.SURFACE,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    borderRadius: 16,
-    padding: SPACING.LG,
-    marginBottom: SPACING.LG,
-  },
-  templateHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.MD,
-    marginBottom: SPACING.SM,
-  },
-  templateTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.SEMIBOLD,
-  },
-  templateDescription: {
-    fontSize: 14,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    marginBottom: SPACING.MD,
-  },
-  templatePreview: {
-    gap: SPACING.SM,
-  },
-  previewItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.SM,
-  },
-  previewText: {
-    fontSize: 12,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-  },
-  recentSection: {
-    marginBottom: SPACING.LG,
-  },
-  recentList: {
-    gap: SPACING.SM,
-  },
-  recentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.SURFACE,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    borderRadius: 12,
-    padding: SPACING.MD,
-  },
-  recentIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.LIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.MD,
-  },
-  recentInfo: {
-    flex: 1,
-  },
-  recentDescription: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.SEMIBOLD,
-  },
-  recentDetails: {
-    fontSize: 12,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    marginTop: 2,
-  },
-  recentAmount: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.DANGER,
-    fontFamily: FONTS.SEMIBOLD,
-  },
-});
 
 export default AddTransactionScreen;
