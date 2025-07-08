@@ -11,12 +11,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-import { COLORS, SPACING, FONTS } from '../../src/constants';
+import { useColors, useTokens, Typography, Card, Button, Heading1, BodyText, Caption } from '../../src/design-system';
 import { Transaction } from '../../src/types';
 import { enhancedTransactionService } from '../../src/services/EnhancedTransactionService';
 import { formatCurrency } from '../../src/utils/currencyUtils';
 
 const TransactionsScreen = () => {
+  const colors = useColors();
+  const tokens = useTokens();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -53,51 +55,91 @@ const TransactionsScreen = () => {
   };
 
   const TransactionItem = ({ item }: { item: Transaction & { formatted?: any } }) => (
-    <TouchableOpacity style={styles.transactionItem}>
-      <View style={styles.transactionIcon}>
-        <Ionicons
-          name={item.type === 'income' ? 'add-circle' : 'remove-circle'}
-          size={24}
-          color={item.type === 'income' ? COLORS.SUCCESS : COLORS.DANGER}
-        />
+    <Card variant="default" style={{ marginBottom: tokens.Spacing.sm }}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: tokens.Spacing.md
+      }}>
+        <View style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.surfaceElevated,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: tokens.Spacing.md
+        }}>
+          <Ionicons
+            name={item.type === 'income' ? 'add-circle' : 'remove-circle'}
+            size={24}
+            color={item.type === 'income' ? colors.success : colors.error}
+          />
+        </View>
+        
+        <View style={{ flex: 1 }}>
+          <Typography variant="body" style={{ fontWeight: '600', marginBottom: 2 }}>
+            {item.description}
+          </Typography>
+          <Caption color="secondary">
+            {item.category} • {item.formatted?.date || new Date(item.date).toLocaleDateString()}
+          </Caption>
+        </View>
+        
+        <Typography variant="amount" style={{
+          color: item.type === 'income' ? colors.success : colors.error
+        }}>
+          {item.formatted?.amount || formatCurrency(Math.abs(item.amount), 'CAD')}
+        </Typography>
       </View>
-      
-      <View style={styles.transactionInfo}>
-        <Text style={styles.transactionDescription}>{item.description}</Text>
-        <Text style={styles.transactionDetails}>
-          {item.category} • {item.formatted?.date || new Date(item.date).toLocaleDateString()}
-        </Text>
-      </View>
-      
-      <Text style={[
-        styles.transactionAmount,
-        { color: item.type === 'income' ? COLORS.SUCCESS : COLORS.DANGER }
-      ]}>
-        {item.formatted?.amount || formatCurrency(Math.abs(item.amount), 'CAD')}
-      </Text>
-    </TouchableOpacity>
+    </Card>
   );
 
   const EmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Ionicons name="wallet-outline" size={64} color={COLORS.TEXT_SECONDARY} />
-      <Text style={styles.emptyTitle}>No transactions yet</Text>
-      <Text style={styles.emptySubtitle}>
+    <View style={{
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: tokens.Spacing.xxxl
+    }}>
+      <Ionicons name="wallet-outline" size={64} color={colors.textSecondary} />
+      <Typography variant="h3" style={{ marginTop: tokens.Spacing.md, marginBottom: tokens.Spacing.sm }}>
+        No transactions yet
+      </Typography>
+      <BodyText color="secondary" align="center" style={{
+        paddingHorizontal: tokens.Spacing.lg,
+        marginBottom: tokens.Spacing.lg
+      }}>
         Start tracking your finances by adding your first transaction
-      </Text>
-      <TouchableOpacity style={styles.addButton} onPress={handleAddTransaction}>
-        <Ionicons name="add" size={20} color="white" />
-        <Text style={styles.addButtonText}>Add Transaction</Text>
-      </TouchableOpacity>
+      </BodyText>
+      <Button
+        variant="primary"
+        size="large"
+        leftIcon={<Ionicons name="add" size={20} color={colors.textInverse} />}
+        onPress={handleAddTransaction}
+      >
+        Add Transaction
+      </Button>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Transactions</Text>
-        <TouchableOpacity style={styles.headerButton} onPress={handleAddTransaction}>
-          <Ionicons name="add" size={24} color={COLORS.PRIMARY} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: tokens.Spacing.lg,
+        backgroundColor: colors.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border
+      }}>
+        <Heading1>Transactions</Heading1>
+        <TouchableOpacity 
+          style={{ padding: tokens.Spacing.sm, borderRadius: 8 }} 
+          onPress={handleAddTransaction}
+        >
+          <Ionicons name="add" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -105,7 +147,10 @@ const TransactionsScreen = () => {
         data={transactions}
         keyExtractor={(item) => item.id}
         renderItem={TransactionItem}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={{
+          padding: tokens.Spacing.lg,
+          flexGrow: 1
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -116,110 +161,6 @@ const TransactionsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: SPACING.MD,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
-    backgroundColor: COLORS.SURFACE,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.BOLD,
-  },
-  headerButton: {
-    padding: SPACING.SM,
-    borderRadius: 8,
-  },
-  listContainer: {
-    padding: SPACING.MD,
-    flexGrow: 1,
-  },
-  transactionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.SURFACE,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    borderRadius: 12,
-    padding: SPACING.MD,
-    marginBottom: SPACING.SM,
-  },
-  transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.LIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.MD,
-  },
-  transactionInfo: {
-    flex: 1,
-  },
-  transactionDescription: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.SEMIBOLD,
-  },
-  transactionDetails: {
-    fontSize: 12,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    marginTop: 2,
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: FONTS.BOLD,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: SPACING.XXL,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.BOLD,
-    marginTop: SPACING.MD,
-    marginBottom: SPACING.SM,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    textAlign: 'center',
-    paddingHorizontal: SPACING.LG,
-    marginBottom: SPACING.LG,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.PRIMARY,
-    paddingHorizontal: SPACING.LG,
-    paddingVertical: SPACING.MD,
-    borderRadius: 12,
-    gap: SPACING.SM,
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-    fontFamily: FONTS.SEMIBOLD,
-  },
-});
+// Styles removed - using design system components
 
 export default TransactionsScreen;

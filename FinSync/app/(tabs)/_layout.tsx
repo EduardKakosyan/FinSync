@@ -5,24 +5,28 @@ import { Platform } from "react-native";
 import { HapticTab } from "@/components/template/HapticTab";
 import { Ionicons } from "@expo/vector-icons";
 import TabBarBackground from "@/components/template/ui/TabBarBackground";
-import { Colors } from "@/constants";
+import { useColors } from "../../src/design-system";
 export default function TabLayout() {
-  const colorScheme = "light"; // Simplified for now
+  const colors = useColors();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          ...Platform.select({
+            ios: {
+              position: "absolute",
+            },
+            default: {},
+          }),
+        },
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: "absolute",
-          },
-          default: {},
-        }),
       }}
     >
       <Tabs.Screen
@@ -64,9 +68,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Settings",
+          title: "Stocks",
           tabBarIcon: ({ color }) => (
-            <Ionicons size={28} name="settings" color={color} />
+            <Ionicons size={28} name="trending-up" color={color} />
           ),
         }}
       />
