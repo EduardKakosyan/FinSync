@@ -67,6 +67,10 @@
     "developmentClient": {
       "silentLaunch": false
     },
+    "packagerOpts": {
+      "config": "metro.config.js",
+      "https": false
+    },
     "cli": {
       "appVersionSource": "remote"
     },
