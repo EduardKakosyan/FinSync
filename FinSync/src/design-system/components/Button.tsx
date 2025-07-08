@@ -113,7 +113,8 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextStyles = (): TextStyle => {
     const baseTextStyle: TextStyle = {
-      fontFamily: tokens.Typography.fonts.primarySemiBold,
+      fontFamily: tokens.Typography.fonts.primary,
+      fontWeight: '600',
       textAlign: 'center',
     };
 
@@ -136,7 +137,7 @@ export const Button: React.FC<ButtonProps> = ({
     // Variant text styles
     const variantTextStyles: Record<ButtonVariant, TextStyle> = {
       primary: {
-        color: disabled ? colors.textTertiary : colors.textInverse,
+        color: disabled ? colors.textTertiary : '#FFFFFF',
       },
       secondary: {
         color: disabled ? colors.textTertiary : colors.primary,
@@ -145,7 +146,7 @@ export const Button: React.FC<ButtonProps> = ({
         color: disabled ? colors.textTertiary : colors.primary,
       },
       destructive: {
-        color: disabled ? colors.textTertiary : colors.textInverse,
+        color: disabled ? colors.textTertiary : '#FFFFFF',
       },
     };
 
@@ -169,7 +170,7 @@ export const Button: React.FC<ButtonProps> = ({
   const showContent = !loading;
 
   const spinnerColor = variant === 'primary' || variant === 'destructive' 
-    ? colors.textInverse 
+    ? '#FFFFFF' 
     : colors.primary;
 
   return (

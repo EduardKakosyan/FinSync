@@ -7,6 +7,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera } from 'expo-camera';
 
 import {
   Typography,
@@ -17,8 +19,7 @@ import {
   Heading2,
   BodyText,
   Caption,
-  Label,
-  useOptimizedSpacing
+  Label
 } from '../../src/design-system';
 import TransactionTemplates from '../../src/components/transaction/TransactionTemplates';
 import { CreateTransactionInput, Transaction } from '../../src/types';
@@ -29,7 +30,6 @@ import { formatCurrency } from '../../src/utils/currencyUtils';
 const AddTransactionScreen = () => {
   const colors = useColors();
   const tokens = useTokens();
-  const spacing = useOptimizedSpacing();
   const params = useLocalSearchParams();
   const [showTemplates, setShowTemplates] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
@@ -325,18 +325,14 @@ const AddTransactionScreen = () => {
               ))}
             </View>
             <View style={{ marginTop: tokens.Spacing.md }}>
-              <ReceiptCaptureButton 
+              <Button
+                variant="primary"
                 size="medium"
-                style={{ alignSelf: 'flex-start' }}
-                onCaptureComplete={(imageUri: string) => {
-                  router.push({
-                    pathname: '/advanced-add-transaction',
-                    params: { 
-                      capturedImageUri: imageUri
-                    },
-                  });
-                }}
-              />
+                leftIcon={<Ionicons name="camera" size={20} color={colors.textInverse} />}
+                onPress={handleCameraPress}
+              >
+                Open Camera
+              </Button>
             </View>
           </Card>
 

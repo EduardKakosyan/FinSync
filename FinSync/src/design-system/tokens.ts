@@ -240,12 +240,12 @@ export const Spacing = {
 // =============================================================================
 
 export const Typography = {
-  // Font families
+  // Font families - React Native compliant
   fonts: {
     primary: 'System',           // iOS: SF Pro, Android: Roboto
-    primaryMedium: 'System-Medium',
-    primarySemiBold: 'System-SemiBold', 
-    primaryBold: 'System-Bold',
+    primaryMedium: 'System',     // Use with fontWeight: '500'
+    primarySemiBold: 'System',   // Use with fontWeight: '600'
+    primaryBold: 'System',       // Use with fontWeight: 'bold'
     monospace: 'Menlo',          // For numbers/amounts
   },
 
@@ -351,6 +351,12 @@ export const Typography = {
       lineHeight: 1.3,
       fontWeight: '500',
       letterSpacing: 0.5,
+    },
+    labelMedium: {
+      fontSize: 16,
+      lineHeight: 1.4,
+      fontWeight: '600',
+      letterSpacing: 0,
     },
     caption: {
       fontSize: 12,

@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.FinSync"
+      "bundleIdentifier": "com.anonymous.FinSync",
+      "infoPlist": {
+        "NSCameraUsageDescription": "FinSync needs access to your camera to scan receipts and capture transaction images.",
+        "NSPhotoLibraryUsageDescription": "FinSync needs access to your photo library to select receipt images."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +22,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.FinSync"
+      "package": "com.anonymous.FinSync",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -34,6 +43,19 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you select receipt images.",
+          "cameraPermission": "The app accesses your camera to let you scan receipts."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FinSync needs access to your camera to scan receipts and capture transaction images."
         }
       ]
     ],
