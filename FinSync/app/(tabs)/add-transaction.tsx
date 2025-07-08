@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import { router } from 'expo-router';
 
 import { COLORS, SPACING, FONTS } from '../../src/constants';
 import TransactionTemplates from '../../src/components/transaction/TransactionTemplates';
-import { CreateTransactionInput } from '../../src/types';
+import { CreateTransactionInput, Transaction } from '../../src/types';
+import { enhancedTransactionService } from '../../src/services/EnhancedTransactionService';
 
 const AddTransactionScreen = () => {
   const [showTemplates, setShowTemplates] = useState(false);
