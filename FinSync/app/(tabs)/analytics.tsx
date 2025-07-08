@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { COLORS, SPACING, FONTS } from '../../src/constants';
+import { useColors, useTokens, Typography, Card, Button, Heading1, BodyText, Caption } from '../../src/design-system';
 import { enhancedTransactionService } from '../../src/services/EnhancedTransactionService';
 import { formatCurrency } from '../../src/utils/currencyUtils';
 
@@ -21,6 +21,8 @@ interface QuickStats {
 }
 
 const AnalyticsScreen = () => {
+  const colors = useColors();
+  const tokens = useTokens();
   const [stats, setStats] = useState<QuickStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,53 +59,84 @@ const AnalyticsScreen = () => {
     icon: string;
     color: string;
   }) => (
-    <View style={styles.statsCard}>
-      <View style={styles.statsHeader}>
-        <View style={[styles.statsIcon, { backgroundColor: color }]}>
-          <Ionicons name={icon as any} size={20} color="white" />
+    <Card variant="default" style={{ flex: 1, marginBottom: tokens.Spacing.md }}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: tokens.Spacing.sm
+      }}>
+        <View style={{
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: color,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: tokens.Spacing.sm
+        }}>
+          <Ionicons name={icon as any} size={20} color={colors.textInverse} />
         </View>
-        <Text style={styles.statsTitle}>{title}</Text>
+        <Typography variant="label">{title}</Typography>
       </View>
       
-      <Text style={styles.statsAmount}>{formatted}</Text>
-      <Text style={styles.statsCount}>
+      <Typography variant="amountLarge" style={{ color: colors.textPrimary, marginBottom: tokens.Spacing.xs }}>
+        {formatted}
+      </Typography>
+      <Caption color="secondary">
         {count} transaction{count !== 1 ? 's' : ''}
-      </Text>
-    </View>
+      </Caption>
+    </Card>
   );
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading analytics...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <BodyText color="secondary">Loading analytics...</BodyText>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.title}>Analytics</Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={loadAnalytics}>
-            <Ionicons name="refresh" size={24} color={COLORS.PRIMARY} />
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: tokens.Spacing.lg,
+          backgroundColor: colors.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border
+        }}>
+          <Heading1>Analytics</Heading1>
+          <TouchableOpacity 
+            style={{ padding: tokens.Spacing.sm, borderRadius: 8 }} 
+            onPress={loadAnalytics}
+          >
+            <Ionicons name="refresh" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         {stats && (
-          <View style={styles.content}>
-            <Text style={styles.sectionTitle}>Spending Overview</Text>
+          <View style={{ padding: tokens.Spacing.lg }}>
+            <Typography variant="h3" style={{ marginBottom: tokens.Spacing.md }}>
+              Spending Overview
+            </Typography>
             
-            <View style={styles.statsGrid}>
+            <View style={{
+              flexDirection: 'row',
+              gap: tokens.Spacing.md,
+              marginBottom: tokens.Spacing.md
+            }}>
               <StatsCard
                 title="Today"
                 amount={stats.today.amount}
                 formatted={stats.today.formatted}
                 count={stats.today.transactionCount}
                 icon="today"
-                color={COLORS.PRIMARY}
+                color={colors.primary}
               />
               
               <StatsCard
@@ -112,7 +145,7 @@ const AnalyticsScreen = () => {
                 formatted={stats.thisWeek.formatted}
                 count={stats.thisWeek.transactionCount}
                 icon="calendar"
-                color={COLORS.INFO}
+                color={colors.info}
               />
             </View>
             
@@ -122,36 +155,54 @@ const AnalyticsScreen = () => {
               formatted={stats.thisMonth.formatted}
               count={stats.thisMonth.transactionCount}
               icon="stats-chart"
-              color={COLORS.SUCCESS}
+              color={colors.success}
             />
             
-            <View style={styles.insightsSection}>
-              <Text style={styles.sectionTitle}>Insights</Text>
+            <View style={{ marginTop: tokens.Spacing.lg }}>
+              <Typography variant="h3" style={{ marginBottom: tokens.Spacing.md }}>
+                Insights
+              </Typography>
               
-              <View style={styles.insightCard}>
-                <Ionicons name="trending-up" size={24} color={COLORS.SUCCESS} />
-                <View style={styles.insightContent}>
-                  <Text style={styles.insightTitle}>Spending Trend</Text>
-                  <Text style={styles.insightText}>
-                    You've spent {stats.thisMonth.formatted} this month
-                  </Text>
+              <Card variant="default" style={{ marginBottom: tokens.Spacing.sm }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: tokens.Spacing.md
+                }}>
+                  <Ionicons name="trending-up" size={24} color={colors.success} />
+                  <View style={{ flex: 1, marginLeft: tokens.Spacing.md }}>
+                    <Typography variant="labelSmall" style={{ fontWeight: '600', marginBottom: tokens.Spacing.xs }}>
+                      Spending Trend
+                    </Typography>
+                    <BodyText color="secondary">
+                      You've spent {stats.thisMonth.formatted} this month
+                    </BodyText>
+                  </View>
                 </View>
-              </View>
+              </Card>
               
-              <View style={styles.insightCard}>
-                <Ionicons name="bulb" size={24} color={COLORS.WARNING} />
-                <View style={styles.insightContent}>
-                  <Text style={styles.insightTitle}>Smart Tip</Text>
-                  <Text style={styles.insightText}>
-                    Try using transaction templates to speed up entry
-                  </Text>
+              <Card variant="default" style={{ marginBottom: tokens.Spacing.sm }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: tokens.Spacing.md
+                }}>
+                  <Ionicons name="bulb" size={24} color={colors.warning} />
+                  <View style={{ flex: 1, marginLeft: tokens.Spacing.md }}>
+                    <Typography variant="labelSmall" style={{ fontWeight: '600', marginBottom: tokens.Spacing.xs }}>
+                      Smart Tip
+                    </Typography>
+                    <BodyText color="secondary">
+                      Try using transaction templates to speed up entry
+                    </BodyText>
+                  </View>
                 </View>
-              </View>
+              </Card>
             </View>
             
-            <Text style={styles.lastUpdated}>
+            <Caption color="secondary" align="center" style={{ marginTop: tokens.Spacing.lg }}>
               Last updated: {stats.lastUpdated.toLocaleString()}
-            </Text>
+            </Caption>
           </View>
         )}
       </ScrollView>
@@ -159,131 +210,6 @@ const AnalyticsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: SPACING.MD,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
-    backgroundColor: COLORS.SURFACE,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.BOLD,
-  },
-  refreshButton: {
-    padding: SPACING.SM,
-    borderRadius: 8,
-  },
-  content: {
-    padding: SPACING.MD,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.SEMIBOLD,
-    marginBottom: SPACING.MD,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: SPACING.SM,
-    marginBottom: SPACING.MD,
-  },
-  statsCard: {
-    flex: 1,
-    backgroundColor: COLORS.SURFACE,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    borderRadius: 12,
-    padding: SPACING.MD,
-    marginBottom: SPACING.SM,
-  },
-  statsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.SM,
-  },
-  statsIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.SM,
-  },
-  statsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.SEMIBOLD,
-  },
-  statsAmount: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.BOLD,
-    marginBottom: SPACING.XS,
-  },
-  statsCount: {
-    fontSize: 12,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-  },
-  insightsSection: {
-    marginTop: SPACING.LG,
-  },
-  insightCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.SURFACE,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    borderRadius: 12,
-    padding: SPACING.MD,
-    marginBottom: SPACING.SM,
-  },
-  insightContent: {
-    flex: 1,
-    marginLeft: SPACING.MD,
-  },
-  insightTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.TEXT_PRIMARY,
-    fontFamily: FONTS.SEMIBOLD,
-    marginBottom: SPACING.XS,
-  },
-  insightText: {
-    fontSize: 14,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-  },
-  lastUpdated: {
-    fontSize: 12,
-    color: COLORS.TEXT_SECONDARY,
-    fontFamily: FONTS.REGULAR,
-    textAlign: 'center',
-    marginTop: SPACING.LG,
-  },
-});
+// Styles removed - using design system components
 
 export default AnalyticsScreen;

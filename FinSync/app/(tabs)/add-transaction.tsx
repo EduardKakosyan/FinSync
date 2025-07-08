@@ -138,6 +138,34 @@ const AddTransactionScreen = () => {
     });
   };
 
+  const handleCameraPress = async () => {
+    // Request camera permissions
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    
+    if (status === 'granted') {
+      // Launch camera for receipt scanning
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        // Navigate to advanced form with camera result
+        router.push({
+          pathname: '/advanced-add-transaction',
+          params: { 
+            receiptImage: result.assets[0].uri,
+          },
+        });
+      }
+    } else {
+      // Handle permission denied
+      console.log('Camera permission denied');
+    }
+  };
+
   const handleSelectRecentTransaction = (transaction: Transaction) => {
     const template: Partial<CreateTransactionInput> = {
       description: transaction.description,
@@ -346,6 +374,51 @@ const AddTransactionScreen = () => {
               </Button>
             </View>
           </View>
+
+          {/* Camera Receipt Scanning */}
+          <Card 
+            variant="default" 
+            onPress={handleCameraPress}
+            style={{ marginBottom: tokens.Spacing.lg }}
+          >
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: tokens.Spacing.md,
+              marginBottom: tokens.Spacing.sm,
+            }}>
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: colors.secondary,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Ionicons name="camera" size={24} color={colors.textInverse} />
+              </View>
+              <Label>Scan Receipt</Label>
+            </View>
+            <Caption color="secondary" style={{ marginBottom: tokens.Spacing.md }}>
+              Use your camera to scan receipts and auto-extract transaction details
+            </Caption>
+            <View style={{ gap: tokens.Spacing.sm }}>
+              {[
+                { icon: 'scan', text: 'Auto-extract amounts', color: colors.success },
+                { icon: 'text', text: 'Recognize merchant names', color: colors.info },
+                { icon: 'time', text: 'Instant transaction creation', color: colors.warning }
+              ].map((item, index) => (
+                <View key={index} style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: tokens.Spacing.sm,
+                }}>
+                  <Ionicons name={item.icon as any} size={14} color={item.color} />
+                  <Caption color="secondary">{item.text}</Caption>
+                </View>
+              ))}
+            </View>
+          </Card>
 
           {/* Templates */}
           <Card 
