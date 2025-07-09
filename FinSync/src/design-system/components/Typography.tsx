@@ -39,7 +39,18 @@ export const Typography: React.FC<TypographyProps> = ({
 
   const getTextStyles = (): TextStyle => {
     // Base variant styles from design tokens
-    const variantStyles = tokens.Typography.textStyles[variant];
+    let variantStyles = tokens.Typography.textStyles[variant];
+    
+    // Fallback if variant is not found
+    if (!variantStyles) {
+      console.warn(`Typography variant '${variant}' not found in textStyles. Using 'body' as fallback.`);
+      variantStyles = tokens.Typography.textStyles.body || {
+        fontSize: 16,
+        lineHeight: 1.6,
+        fontWeight: 'normal',
+        letterSpacing: 0,
+      };
+    }
     
     // Color mapping
     const colorMap: Record<TextColor, string> = {
