@@ -24,6 +24,7 @@ import {
   SafeScroll,
   useResponsiveDimensions
 } from "../../src/design-system";
+import ReceiptCaptureButton from "../../src/components/receipt/ReceiptCaptureButton";
 
 type TimePeriod = "day" | "week" | "month";
 
@@ -183,17 +184,6 @@ export default function HomeScreen() {
     </View>
   );
 
-  const ReceiptCaptureButton = () => (
-    <Button
-      variant="primary"
-      size="large"
-      fullWidth
-      leftIcon={<Ionicons name="camera" size={24} color={colors.textInverse} />}
-      style={{ marginTop: tokens.Spacing.md }}
-    >
-      Scan Receipt
-    </Button>
-  );
 
   if (errorMessage) {
     return (
@@ -370,7 +360,7 @@ export default function HomeScreen() {
             paddingHorizontal: tokens.Spacing.lg,
             marginTop: tokens.Spacing.lg,
           }}>
-            <ReceiptCaptureButton />
+            <ReceiptCaptureButton showOptions={true} />
           </View>
         </SafeScroll>
       </ResponsiveContainer>

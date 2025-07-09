@@ -1,10 +1,10 @@
 /**
  * Account Data Service for FinSync Financial App
  * Handles CRUD operations for financial accounts
+ * Updated to use Firebase backend
  */
 
-import BaseDataService from './BaseDataService';
-import { STORAGE_KEYS } from './StorageKeys';
+import { firebaseAccountService } from '../firebase';
 import {
   Account,
   ValidationResult,
@@ -13,15 +13,13 @@ import {
   AccountBalance,
 } from '../../types';
 
-export class AccountService extends BaseDataService<Account> {
-  constructor() {
-    super(STORAGE_KEYS.ACCOUNTS, 'account');
-  }
+export class AccountService {
+  private firebaseService = firebaseAccountService;
 
   /**
    * Validate account data
    */
-  protected validateEntity(account: Partial<Account>): ValidationResult {
+  private validateEntity(account: Partial<Account>): ValidationResult {
     const errors: ValidationError[] = [];
 
     // Required fields validation
@@ -41,10 +39,10 @@ export class AccountService extends BaseDataService<Account> {
       });
     }
 
-    if (!account.type || !['checking', 'savings', 'credit', 'investment'].includes(account.type)) {
+    if (!account.type || !['checking', 'savings', 'credit', 'investment', 'loan', 'cash', 'other'].includes(account.type)) {
       errors.push({
         field: 'type',
-        message: 'Account type must be checking, savings, credit, or investment',
+        message: 'Invalid account type',
         code: 'INVALID_VALUE',
         value: account.type,
       });
@@ -66,23 +64,24 @@ export class AccountService extends BaseDataService<Account> {
       });
     }
 
-    if (!account.currency || !['CAD', 'USD'].includes(account.currency)) {
+    if (!account.currency || account.currency.length !== 3) {
       errors.push({
         field: 'currency',
-        message: 'Currency must be CAD or USD',
-        code: 'INVALID_VALUE',
+        message: 'Currency must be a 3-letter code',
+        code: 'INVALID_FORMAT',
         value: account.currency,
       });
     }
 
-    if (account.isActive === undefined || account.isActive === null) {
+    if (!account.color || !/^#[0-9A-F]{6}$/i.test(account.color)) {
       errors.push({
-        field: 'isActive',
-        message: 'isActive field is required',
-        code: 'REQUIRED',
-        value: account.isActive,
+        field: 'color',
+        message: 'Color must be a valid hex color',
+        code: 'INVALID_FORMAT',
+        value: account.color,
       });
     }
+
 
     return {
       isValid: errors.length === 0,
@@ -92,37 +91,49 @@ export class AccountService extends BaseDataService<Account> {
   }
 
   /**
-   * Transform account for storage
+   * Create a new account
    */
-  protected transformForStorage(account: Account): any {
-    return {
-      ...account,
-      createdAt: account.createdAt.toISOString(),
-    };
-  }
-
-  /**
-   * Transform account from storage
-   */
-  protected transformFromStorage(data: any): Account {
-    return {
-      ...data,
-      createdAt: new Date(data.createdAt),
-    };
-  }
-
-  /**
-   * Create a new account with validation for duplicates
-   */
-  async create(accountData: CreateAccountInput): Promise<Account> {
-    // Check for duplicate names
-    const existing = await this.getByName(accountData.name);
-    if (existing) {
-      throw new Error(`Account with name "${accountData.name}" already exists`);
+  async create(account: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>): Promise<Account> {
+    const validation = this.validateEntity(account);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
     }
-
-    return super.create(accountData);
+    return this.firebaseService.create(account);
   }
+
+  /**
+   * Get an account by ID
+   */
+  async getById(id: string): Promise<Account | null> {
+    return this.firebaseService.getById(id);
+  }
+
+  /**
+   * Get all accounts
+   */
+  async getAll(): Promise<Account[]> {
+    return this.firebaseService.getAll();
+  }
+
+  /**
+   * Update an account
+   */
+  async update(id: string, updates: Partial<Account>): Promise<Account> {
+    const validation = this.validateEntity(updates);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+    }
+    return this.firebaseService.update(id, updates);
+  }
+
+  /**
+   * Delete an account
+   */
+  async delete(id: string): Promise<boolean> {
+    await this.firebaseService.delete(id);
+    return true;
+  }
+
 
   /**
    * Get account by name
@@ -138,16 +149,14 @@ export class AccountService extends BaseDataService<Account> {
    * Get accounts by type
    */
   async getByType(type: Account['type']): Promise<Account[]> {
-    const accounts = await this.getAll();
-    return accounts.filter(account => account.type === type);
+    return this.firebaseService.getByType(type);
   }
 
   /**
-   * Get active accounts only
+   * Get active accounts
    */
   async getActiveAccounts(): Promise<Account[]> {
-    const accounts = await this.getAll();
-    return accounts.filter(account => account.isActive);
+    return this.firebaseService.getActiveAccounts();
   }
 
   /**
@@ -169,12 +178,8 @@ export class AccountService extends BaseDataService<Account> {
   /**
    * Update account balance
    */
-  async updateBalance(accountId: string, newBalance: number): Promise<Account> {
-    if (typeof newBalance !== 'number' || isNaN(newBalance)) {
-      throw new Error('Balance must be a valid number');
-    }
-
-    return this.update(accountId, { balance: newBalance });
+  async updateBalance(id: string, newBalance: number): Promise<Account> {
+    return this.firebaseService.updateBalance(id, newBalance);
   }
 
   /**
@@ -205,35 +210,44 @@ export class AccountService extends BaseDataService<Account> {
   }
 
   /**
-   * Get total balance across all active accounts
+   * Get total balance across all accounts
    */
-  async getTotalBalance(currency?: 'CAD' | 'USD'): Promise<number> {
-    let accounts = await this.getActiveAccounts();
-    
-    if (currency) {
-      accounts = accounts.filter(account => account.currency === currency);
-    }
-
-    return accounts.reduce((total, account) => total + account.balance, 0);
+  async getTotalBalance(currency?: string): Promise<number> {
+    return this.firebaseService.getTotalBalance(currency);
   }
 
   /**
-   * Get balance breakdown by account type
+   * Get default account
    */
-  async getBalanceByType(): Promise<Record<Account['type'], number>> {
-    const accounts = await this.getActiveAccounts();
-    const breakdown: Record<Account['type'], number> = {
-      checking: 0,
-      savings: 0,
-      credit: 0,
-      investment: 0,
-    };
+  async getDefaultAccount(): Promise<Account | null> {
+    const accounts = await this.getAll();
+    return accounts.find(account => account.isDefault) || accounts[0] || null;
+  }
 
-    accounts.forEach(account => {
-      breakdown[account.type] += account.balance;
-    });
+  /**
+   * Set default account
+   */
+  async setDefaultAccount(id: string): Promise<void> {
+    const accounts = await this.getAll();
+    
+    // Update all accounts to not be default
+    await Promise.all(
+      accounts.map(account => 
+        account.id !== id && account.isDefault
+          ? this.update(account.id, { isDefault: false })
+          : Promise.resolve()
+      )
+    );
 
-    return breakdown;
+    // Set the specified account as default
+    await this.update(id, { isDefault: true });
+  }
+
+  /**
+   * Initialize default account if needed
+   */
+  async initializeDefault(): Promise<void> {
+    return this.firebaseService.initializeDefault();
   }
 
   /**
@@ -254,182 +268,48 @@ export class AccountService extends BaseDataService<Account> {
   }
 
   /**
-   * Get account summary statistics
+   * Get accounts summary
    */
-  async getAccountSummary(): Promise<{
+  async getAccountsSummary(): Promise<{
     totalAccounts: number;
     activeAccounts: number;
     totalBalance: number;
-    balanceByType: Record<Account['type'], number>;
-    balanceByCurrency: Record<'CAD' | 'USD', number>;
+    byType: Record<string, { count: number; balance: number }>;
   }> {
-    const allAccounts = await this.getAll();
-    const activeAccounts = allAccounts.filter(account => account.isActive);
+    const accounts = await this.getAll();
+    const activeAccounts = accounts.filter(acc => acc.isActive);
 
-    const balanceByType = await this.getBalanceByType();
+    const byType: Record<string, { count: number; balance: number }> = {};
     
-    const balanceByCurrency = {
-      CAD: activeAccounts
-        .filter(account => account.currency === 'CAD')
-        .reduce((total, account) => total + account.balance, 0),
-      USD: activeAccounts
-        .filter(account => account.currency === 'USD')
-        .reduce((total, account) => total + account.balance, 0),
-    };
+    accounts.forEach(account => {
+      if (!byType[account.type]) {
+        byType[account.type] = { count: 0, balance: 0 };
+      }
+      byType[account.type].count++;
+      byType[account.type].balance += account.balance;
+    });
 
     return {
-      totalAccounts: allAccounts.length,
+      totalAccounts: accounts.length,
       activeAccounts: activeAccounts.length,
-      totalBalance: activeAccounts.reduce((total, account) => total + account.balance, 0),
-      balanceByType,
-      balanceByCurrency,
+      totalBalance: await this.getTotalBalance(),
+      byType,
     };
   }
 
-  /**
-   * Get default accounts for initial setup
-   */
-  static getDefaultAccounts(): CreateAccountInput[] {
-    return [
-      {
-        name: 'Checking Account',
-        type: 'checking',
-        balance: 0,
-        currency: 'CAD',
-        isActive: true,
-      },
-      {
-        name: 'Savings Account',
-        type: 'savings',
-        balance: 0,
-        currency: 'CAD',
-        isActive: true,
-      },
-      {
-        name: 'Credit Card',
-        type: 'credit',
-        balance: 0,
-        currency: 'CAD',
-        isActive: true,
-      },
-    ];
-  }
 
   /**
-   * Initialize default accounts (for first-time setup)
+   * Search accounts by name
    */
-  async initializeDefaultAccounts(): Promise<Account[]> {
-    const existingAccounts = await this.getAll();
-    if (existingAccounts.length > 0) {
-      throw new Error('Accounts already exist. Cannot initialize defaults.');
-    }
-
-    const defaultAccounts = AccountService.getDefaultAccounts();
-    const createdAccounts: Account[] = [];
-
-    for (const accountData of defaultAccounts) {
-      try {
-        const account = await this.create(accountData);
-        createdAccounts.push(account);
-      } catch (error) {
-        console.warn(`Failed to create default account ${accountData.name}:`, error);
-      }
-    }
-
-    return createdAccounts;
-  }
-
-  /**
-   * Enhanced text search for accounts
-   */
-  protected filterByText(accounts: Account[], text: string): Account[] {
-    const searchTerm = text.toLowerCase();
-    return accounts.filter(account =>
-      account.name.toLowerCase().includes(searchTerm) ||
-      account.type.toLowerCase().includes(searchTerm) ||
-      account.currency.toLowerCase().includes(searchTerm)
+  async searchByName(searchTerm: string): Promise<Account[]> {
+    const accounts = await this.getAll();
+    const term = searchTerm.toLowerCase();
+    return accounts.filter(account => 
+      account.name.toLowerCase().includes(term) ||
+      (account.institution && account.institution.toLowerCase().includes(term))
     );
   }
 
-  /**
-   * Transfer funds between accounts
-   */
-  async transferFunds(
-    fromAccountId: string,
-    toAccountId: string,
-    amount: number
-  ): Promise<{ fromAccount: Account; toAccount: Account }> {
-    if (amount <= 0) {
-      throw new Error('Transfer amount must be greater than 0');
-    }
-
-    if (fromAccountId === toAccountId) {
-      throw new Error('Cannot transfer to the same account');
-    }
-
-    const fromAccount = await this.getById(fromAccountId);
-    const toAccount = await this.getById(toAccountId);
-
-    if (!fromAccount) {
-      throw new Error(`Source account not found: ${fromAccountId}`);
-    }
-
-    if (!toAccount) {
-      throw new Error(`Destination account not found: ${toAccountId}`);
-    }
-
-    if (!fromAccount.isActive || !toAccount.isActive) {
-      throw new Error('Both accounts must be active for transfers');
-    }
-
-    // Check sufficient funds (for non-credit accounts)
-    if (fromAccount.type !== 'credit' && fromAccount.balance < amount) {
-      throw new Error('Insufficient funds for transfer');
-    }
-
-    // Perform transfer
-    const updatedFromAccount = await this.adjustBalance(fromAccountId, -amount);
-    const updatedToAccount = await this.adjustBalance(toAccountId, amount);
-
-    return {
-      fromAccount: updatedFromAccount,
-      toAccount: updatedToAccount,
-    };
-  }
-
-  /**
-   * Validate account for deletion (check for dependencies)
-   */
-  async canDelete(accountId: string): Promise<{ canDelete: boolean; reason?: string }> {
-    const account = await this.getById(accountId);
-    if (!account) {
-      return { canDelete: false, reason: 'Account not found' };
-    }
-
-    // In a real app, you'd check for transactions linked to this account
-    // For now, we'll allow deletion if the account is inactive and has zero balance
-    if (account.isActive) {
-      return { canDelete: false, reason: 'Cannot delete active account. Deactivate first.' };
-    }
-
-    if (account.balance !== 0) {
-      return { canDelete: false, reason: 'Cannot delete account with non-zero balance' };
-    }
-
-    return { canDelete: true };
-  }
-
-  /**
-   * Safe delete with validation
-   */
-  async safeDelete(accountId: string): Promise<boolean> {
-    const validation = await this.canDelete(accountId);
-    if (!validation.canDelete) {
-      throw new Error(validation.reason || 'Cannot delete account');
-    }
-
-    return this.delete(accountId);
-  }
 }
 
 // Singleton instance
