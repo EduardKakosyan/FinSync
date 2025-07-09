@@ -332,6 +332,18 @@ export const Typography = {
       fontWeight: 'normal',
       letterSpacing: 0,
     },
+    body1: {
+      fontSize: 16,
+      lineHeight: 1.6,
+      fontWeight: 'normal',
+      letterSpacing: 0,
+    },
+    body2: {
+      fontSize: 14,
+      lineHeight: 1.5,
+      fontWeight: 'normal',
+      letterSpacing: 0,
+    },
     bodySmall: {
       fontSize: 14,
       lineHeight: 1.4,

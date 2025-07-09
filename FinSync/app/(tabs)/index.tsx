@@ -59,6 +59,12 @@ export default function HomeScreen() {
   const [showInsights, setShowInsights] = useState(false);
   
   useEffect(() => {
+    // Configure enhanced service to use real Firebase data
+    enhancedTransactionService.updateConfiguration({
+      useMockData: false,
+      autoFormat: true,
+      enableCaching: true,
+    });
     loadAnalytics();
   }, []);
   

@@ -24,21 +24,34 @@ const TransactionsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    // Configure enhanced service to use real Firebase data
+    enhancedTransactionService.updateConfiguration({
+      useMockData: false,
+      autoFormat: true,
+      enableCaching: true,
+    });
     loadTransactions();
   }, []);
 
   const loadTransactions = async () => {
     try {
+      console.log('🔍 Loading transactions...');
       const response = await enhancedTransactionService.getTransactions(
         { type: 'month' },
         true
       );
       
+      console.log('📊 Transaction response:', response);
+      
       if (response.success && response.data) {
+        console.log('✅ Found transactions:', response.data.length);
+        console.log('💾 First transaction:', response.data[0]);
         setTransactions(response.data);
+      } else {
+        console.log('❌ No transactions found or error:', response.error);
       }
     } catch (error) {
-      console.error('Failed to load transactions:', error);
+      console.error('💥 Failed to load transactions:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -89,7 +102,9 @@ const TransactionsScreen = () => {
         <Typography variant="amount" style={{
           color: item.type === 'income' ? colors.success : colors.error
         }}>
-          {item.formatted?.amount || formatCurrency(Math.abs(item.amount), 'CAD')}
+          {typeof item.formatted?.amount === 'string' 
+            ? item.formatted.amount 
+            : item.formatted?.amount?.formatted || formatCurrency(Math.abs(item.amount), 'CAD')}
         </Typography>
       </View>
     </Card>

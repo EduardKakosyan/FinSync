@@ -4,7 +4,7 @@ import { useTheme } from '../ThemeProvider';
 
 export type TypographyVariant = 
   | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
-  | 'bodyLarge' | 'body' | 'bodySmall'
+  | 'bodyLarge' | 'body' | 'body1' | 'body2' | 'bodySmall'
   | 'label' | 'labelSmall' | 'labelMedium' | 'caption'
   | 'amount' | 'amountLarge'
   | 'button' | 'buttonSmall';
