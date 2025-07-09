@@ -69,3 +69,5 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+export default RootLayout;
