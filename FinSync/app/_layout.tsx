@@ -11,6 +11,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "../hooks/useColorScheme";
 import { ThemeProvider } from "../src/design-system";
 import { useFirebaseMigration } from "../src/hooks/useFirebaseMigration";
+import { useRecurringTransactions } from "../src/hooks/useRecurringTransactions";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -20,6 +21,9 @@ export default function RootLayout() {
   
   // Run Firebase migration on app startup
   const { isMigrating, migrationComplete, error } = useFirebaseMigration();
+  
+  // Process recurring transactions automatically
+  const { isProcessing: isProcessingRecurring } = useRecurringTransactions();
 
   if (!loaded || isMigrating) {
     // Wait for fonts to load and migration to complete
@@ -39,6 +43,13 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen 
             name="advanced-add-transaction" 
+            options={{ 
+              headerShown: false,
+              presentation: 'modal'
+            }} 
+          />
+          <Stack.Screen 
+            name="recurring-transactions" 
             options={{ 
               headerShown: false,
               presentation: 'modal'
