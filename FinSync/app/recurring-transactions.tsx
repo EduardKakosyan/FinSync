@@ -58,20 +58,20 @@ export default function RecurringTransactionsScreen() {
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name=\"arrow-back\" size={24} color={colors.textPrimary} />
+            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Typography variant=\"h4\" style={{ marginLeft: tokens.Spacing.sm }}>
+          <Typography variant="h4" style={{ marginLeft: tokens.Spacing.sm }}>
             Recurring Transactions
           </Typography>
         </View>
         
         <TouchableOpacity onPress={createNewRecurringTransaction}>
-          <Ionicons name=\"add\" size={24} color={colors.primary} />
+          <Ionicons name="add" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={{ flex: 1 }}>
-        <Stack spacing=\"lg\" style={{ padding: tokens.Spacing.lg }}>
+        <Stack spacing="lg" style={{ padding: tokens.Spacing.lg }}>
           {/* Status Information */}
           <View style={{
             backgroundColor: colors.surface,
@@ -81,7 +81,7 @@ export default function RecurringTransactionsScreen() {
             borderColor: colors.border,
           }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant=\"body2\" style={{ color: colors.textSecondary }}>
+              <Typography variant="body2" style={{ color: colors.textSecondary }}>
                 Last processed: {lastProcessed ? lastProcessed.toLocaleString() : 'Never'}
               </Typography>
               <TouchableOpacity
@@ -94,20 +94,20 @@ export default function RecurringTransactionsScreen() {
                   borderRadius: 8,
                 }}
               >
-                <Typography variant=\"caption\" style={{ color: '#FFFFFF' }}>
+                <Typography variant="caption" style={{ color: '#FFFFFF' }}>
                   {isProcessing ? 'Processing...' : 'Process Now'}
                 </Typography>
               </TouchableOpacity>
             </View>
             
             {processedCount > 0 && (
-              <Typography variant=\"body2\" style={{ color: colors.success, marginTop: 4 }}>
+              <Typography variant="body2" style={{ color: colors.success, marginTop: 4 }}>
                 {processedCount} transaction{processedCount > 1 ? 's' : ''} processed today
               </Typography>
             )}
             
             {error && (
-              <Typography variant=\"body2\" style={{ color: colors.error, marginTop: 4 }}>
+              <Typography variant="body2" style={{ color: colors.error, marginTop: 4 }}>
                 Error: {error}
               </Typography>
             )}

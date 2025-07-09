@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   ScrollView,
   RefreshControl,
   SafeAreaView,
   View,
+  TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useHomeViewModel } from "../../src/screens/home/HomeViewModel";
 import { formatCurrency } from "../../src/utils/currencyUtils";
 import { 
@@ -25,8 +27,16 @@ import {
   useResponsiveDimensions
 } from "../../src/design-system";
 import ReceiptCaptureButton from "../../src/components/receipt/ReceiptCaptureButton";
+import { enhancedTransactionService } from "../../src/services/EnhancedTransactionService";
 
 type TimePeriod = "day" | "week" | "month";
+
+interface QuickStats {
+  today: { amount: number; formatted: string; transactionCount: number };
+  thisWeek: { amount: number; formatted: string; transactionCount: number };
+  thisMonth: { amount: number; formatted: string; transactionCount: number };
+  lastUpdated: Date;
+}
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -43,6 +53,26 @@ export default function HomeScreen() {
     changePeriod,
     refresh,
   } = useHomeViewModel();
+  
+  // Enhanced analytics state
+  const [stats, setStats] = useState<QuickStats | null>(null);
+  const [showInsights, setShowInsights] = useState(false);
+  
+  useEffect(() => {
+    loadAnalytics();
+  }, []);
+  
+  const loadAnalytics = async () => {
+    try {
+      const response = await enhancedTransactionService.getQuickStats();
+      
+      if (response.success && response.data) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    }
+  };
 
   const SpendingCard = ({
     title,
@@ -84,6 +114,50 @@ export default function HomeScreen() {
       {subtitle && (
         <Caption color="secondary">{subtitle}</Caption>
       )}
+    </Card>
+  );
+  
+  const QuickStatsCard = ({ 
+    title, 
+    amount, 
+    formatted, 
+    count, 
+    icon, 
+    color 
+  }: {
+    title: string;
+    amount: number;
+    formatted: string;
+    count: number;
+    icon: string;
+    color: string;
+  }) => (
+    <Card variant="default" style={{ flex: 1, marginBottom: tokens.Spacing.md }}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: tokens.Spacing.sm
+      }}>
+        <View style={{
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: color,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: tokens.Spacing.sm
+        }}>
+          <Ionicons name={icon as any} size={20} color={colors.surface} />
+        </View>
+        <Typography variant="label">{title}</Typography>
+      </View>
+      
+      <Typography variant="h5" style={{ color: colors.textPrimary, marginBottom: tokens.Spacing.xs }}>
+        {formatted}
+      </Typography>
+      <Caption color="secondary">
+        {count} transaction{count !== 1 ? 's' : ''}
+      </Caption>
     </Card>
   );
 
@@ -228,12 +302,43 @@ export default function HomeScreen() {
         >
           {/* Header */}
           <Stack spacing="md" style={{ padding: tokens.Spacing.lg }}>
-            <Heading1>FinSync</Heading1>
-            <BodyText color="secondary">
-              {selectedPeriod === "day" && "Today's Overview"}
-              {selectedPeriod === "week" && "This Week's Overview"}
-              {selectedPeriod === "month" && "This Month's Overview"}
-            </BodyText>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <Heading1>FinSync</Heading1>
+                <BodyText color="secondary">
+                  {selectedPeriod === "day" && "Today's Overview"}
+                  {selectedPeriod === "week" && "This Week's Overview"}
+                  {selectedPeriod === "month" && "This Month's Overview"}
+                </BodyText>
+              </View>
+              <View style={{ flexDirection: 'row', gap: tokens.Spacing.sm }}>
+                <TouchableOpacity
+                  onPress={() => router.push('/recurring-transactions')}
+                  style={{
+                    padding: tokens.Spacing.sm,
+                    backgroundColor: colors.primary,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Ionicons name="repeat" size={20} color={colors.surface} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    refresh();
+                    loadAnalytics();
+                  }}
+                  style={{
+                    padding: tokens.Spacing.sm,
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <Ionicons name="refresh" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
           </Stack>
 
           {/* Time Period Selector */}
@@ -290,6 +395,104 @@ export default function HomeScreen() {
               </Grid>
             </View>
           ) : null}
+          
+          {/* Quick Analytics Stats */}
+          {stats && (
+            <View style={{ paddingHorizontal: tokens.Spacing.lg, marginBottom: tokens.Spacing.lg }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: tokens.Spacing.md }}>
+                <Typography variant="h3">Quick Analytics</Typography>
+                <TouchableOpacity onPress={() => setShowInsights(!showInsights)}>
+                  <Ionicons 
+                    name={showInsights ? "chevron-up" : "chevron-down"} 
+                    size={20} 
+                    color={colors.textSecondary} 
+                  />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={{
+                flexDirection: 'row',
+                gap: tokens.Spacing.sm,
+                marginBottom: tokens.Spacing.md
+              }}>
+                <QuickStatsCard
+                  title="Today"
+                  amount={stats.today.amount}
+                  formatted={stats.today.formatted}
+                  count={stats.today.transactionCount}
+                  icon="today"
+                  color={colors.primary}
+                />
+                
+                <QuickStatsCard
+                  title="This Week"
+                  amount={stats.thisWeek.amount}
+                  formatted={stats.thisWeek.formatted}
+                  count={stats.thisWeek.transactionCount}
+                  icon="calendar"
+                  color={colors.info || colors.primary}
+                />
+              </View>
+              
+              <QuickStatsCard
+                title="This Month"
+                amount={stats.thisMonth.amount}
+                formatted={stats.thisMonth.formatted}
+                count={stats.thisMonth.transactionCount}
+                icon="stats-chart"
+                color={colors.success}
+              />
+            </View>
+          )}
+          
+          {/* Insights Section */}
+          {showInsights && stats && (
+            <View style={{ paddingHorizontal: tokens.Spacing.lg, marginBottom: tokens.Spacing.lg }}>
+              <Typography variant="h3" style={{ marginBottom: tokens.Spacing.md }}>
+                Insights
+              </Typography>
+              
+              <Card variant="default" style={{ marginBottom: tokens.Spacing.sm }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: tokens.Spacing.md
+                }}>
+                  <Ionicons name="trending-up" size={24} color={colors.success} />
+                  <View style={{ flex: 1, marginLeft: tokens.Spacing.md }}>
+                    <Typography variant="body1" style={{ fontWeight: '600', marginBottom: tokens.Spacing.xs }}>
+                      Spending Trend
+                    </Typography>
+                    <BodyText color="secondary">
+                      You've spent {stats.thisMonth.formatted} this month
+                    </BodyText>
+                  </View>
+                </View>
+              </Card>
+              
+              <Card variant="default" style={{ marginBottom: tokens.Spacing.sm }}>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: tokens.Spacing.md
+                }}>
+                  <Ionicons name="bulb" size={24} color={colors.warning || colors.primary} />
+                  <View style={{ flex: 1, marginLeft: tokens.Spacing.md }}>
+                    <Typography variant="body1" style={{ fontWeight: '600', marginBottom: tokens.Spacing.xs }}>
+                      Smart Tip
+                    </Typography>
+                    <BodyText color="secondary">
+                      Try setting up recurring transactions for regular income and expenses
+                    </BodyText>
+                  </View>
+                </View>
+              </Card>
+              
+              <Caption color="secondary" align="center" style={{ marginTop: tokens.Spacing.sm }}>
+                Last updated: {stats.lastUpdated.toLocaleString()}
+              </Caption>
+            </View>
+          )}
 
           {/* Content Grid for Tablet */}
           {isTablet && (categoryBreakdown.length > 0 || recentTransactions.length > 0) ? (
@@ -355,12 +558,22 @@ export default function HomeScreen() {
             </Stack>
           )}
 
-          {/* Receipt Capture Button */}
+          {/* Action Buttons */}
           <View style={{
             paddingHorizontal: tokens.Spacing.lg,
             marginTop: tokens.Spacing.lg,
           }}>
-            <ReceiptCaptureButton showOptions={true} />
+            <Grid columns={isTablet ? 2 : 1} spacing="md">
+              <ReceiptCaptureButton showOptions={true} />
+              <Button 
+                variant="outline" 
+                onPress={() => router.push('/advanced-add-transaction')}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Ionicons name="add" size={20} color={colors.primary} style={{ marginRight: tokens.Spacing.xs }} />
+                Add Transaction
+              </Button>
+            </Grid>
           </View>
         </SafeScroll>
       </ResponsiveContainer>

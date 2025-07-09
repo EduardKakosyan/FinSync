@@ -65,4 +65,164 @@ export const RecurringTransactionManager: React.FC<RecurringTransactionManagerPr
   const deleteRecurringTransaction = async (transaction: Transaction) => {
     Alert.alert(
       'Delete Recurring Transaction',
-      `Are you sure you want to delete the recurring transaction \"${transaction.description}\"?`,\n      [\n        { text: 'Cancel', style: 'cancel' },\n        {\n          text: 'Delete',\n          style: 'destructive',\n          onPress: async () => {\n            try {\n              await firebaseTransactionService.delete(transaction.id);\n              await loadRecurringTransactions();\n              Alert.alert('Success', 'Recurring transaction deleted successfully');\n            } catch (error) {\n              console.error('Error deleting recurring transaction:', error);\n              Alert.alert('Error', 'Failed to delete recurring transaction');\n            }\n          },\n        },\n      ]\n    );\n  };\n\n  const formatRecurringInfo = (transaction: any) => {\n    const { isRecurring, recurringInterval, recurringDay, recurringEndDate } = transaction;\n    \n    if (!isRecurring) return null;\n\n    let intervalText = '';\n    switch (recurringInterval) {\n      case 'weekly':\n        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];\n        intervalText = `Every ${days[recurringDay || 0]}`;\n        break;\n      case 'monthly':\n        intervalText = `Monthly on the ${recurringDay || 1}${getOrdinalSuffix(recurringDay || 1)}`;\n        break;\n      case 'yearly':\n        intervalText = 'Yearly on the same date';\n        break;\n    }\n\n    const endText = recurringEndDate ? ` until ${new Date(recurringEndDate).toLocaleDateString()}` : '';\n    return `${intervalText}${endText}`;\n  };\n\n  const getOrdinalSuffix = (day: number) => {\n    if (day >= 11 && day <= 13) return 'th';\n    switch (day % 10) {\n      case 1: return 'st';\n      case 2: return 'nd';\n      case 3: return 'rd';\n      default: return 'th';\n    }\n  };\n\n  if (isLoading) {\n    return (\n      <Card style={{ padding: 20, alignItems: 'center' }}>\n        <Typography variant=\"body2\">Loading recurring transactions...</Typography>\n      </Card>\n    );\n  }\n\n  return (\n    <View>\n      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>\n        <Typography variant=\"h5\" style={{ color: theme.colors.text }}>\n          Recurring Transactions\n        </Typography>\n        <Button\n          variant=\"outline\"\n          onPress={processRecurringTransactions}\n          disabled={isProcessing}\n          loading={isProcessing}\n        >\n          Process Due\n        </Button>\n      </View>\n\n      {recurringTransactions.length === 0 ? (\n        <Card style={{ padding: 20, alignItems: 'center' }}>\n          <Ionicons name=\"repeat-outline\" size={48} color={theme.colors.textSecondary} />\n          <Typography variant=\"body2\" style={{ color: theme.colors.textSecondary, marginTop: 12, textAlign: 'center' }}>\n            No recurring transactions set up yet.\n            Create one to automate your regular income or expenses.\n          </Typography>\n        </Card>\n      ) : (\n        <ScrollView style={{ maxHeight: 400 }}>\n          {recurringTransactions.map((transaction) => {\n            const recurringInfo = formatRecurringInfo(transaction);\n            return (\n              <Card key={transaction.id} style={{ marginBottom: 12 }}>\n                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>\n                  <View style={{ flex: 1 }}>\n                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>\n                      <Typography variant=\"body1\" style={{ color: theme.colors.text, fontWeight: '600' }}>\n                        {transaction.description}\n                      </Typography>\n                      <View style={{\n                        backgroundColor: transaction.type === 'income' ? theme.colors.success : theme.colors.error,\n                        paddingHorizontal: 8,\n                        paddingVertical: 2,\n                        borderRadius: 12,\n                        marginLeft: 8,\n                      }}>\n                        <Typography variant=\"caption\" style={{ color: '#FFFFFF' }}>\n                          {transaction.type.toUpperCase()}\n                        </Typography>\n                      </View>\n                    </View>\n                    \n                    <Typography variant=\"h6\" style={{ \n                      color: transaction.type === 'income' ? theme.colors.success : theme.colors.error,\n                      marginBottom: 4,\n                    }}>\n                      ${transaction.amount.toFixed(2)}\n                    </Typography>\n                    \n                    {recurringInfo && (\n                      <Typography variant=\"body2\" style={{ color: theme.colors.textSecondary }}>\n                        {recurringInfo}\n                      </Typography>\n                    )}\n                  </View>\n                  \n                  <View style={{ flexDirection: 'row', gap: 8 }}>\n                    {onTransactionSelect && (\n                      <TouchableOpacity\n                        style={{\n                          padding: 8,\n                          backgroundColor: theme.colors.primary,\n                          borderRadius: 8,\n                        }}\n                        onPress={() => onTransactionSelect(transaction)}\n                      >\n                        <Ionicons name=\"pencil\" size={16} color=\"#FFFFFF\" />\n                      </TouchableOpacity>\n                    )}\n                    \n                    <TouchableOpacity\n                      style={{\n                        padding: 8,\n                        backgroundColor: theme.colors.error,\n                        borderRadius: 8,\n                      }}\n                      onPress={() => deleteRecurringTransaction(transaction)}\n                    >\n                      <Ionicons name=\"trash\" size={16} color=\"#FFFFFF\" />\n                    </TouchableOpacity>\n                  </View>\n                </View>\n              </Card>\n            );\n          })}\n        </ScrollView>\n      )}\n    </View>\n  );\n};\n\nexport default RecurringTransactionManager;
+      `Are you sure you want to delete the recurring transaction "${transaction.description}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await firebaseTransactionService.delete(transaction.id);
+              await loadRecurringTransactions();
+              Alert.alert('Success', 'Recurring transaction deleted successfully');
+            } catch (error) {
+              console.error('Error deleting recurring transaction:', error);
+              Alert.alert('Error', 'Failed to delete recurring transaction');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const formatRecurringInfo = (transaction: any) => {
+    const { isRecurring, recurringInterval, recurringDay, recurringEndDate } = transaction;
+    
+    if (!isRecurring) return null;
+
+    let intervalText = '';
+    switch (recurringInterval) {
+      case 'weekly':
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        intervalText = `Every ${days[recurringDay || 0]}`;
+        break;
+      case 'monthly':
+        intervalText = `Monthly on the ${recurringDay || 1}${getOrdinalSuffix(recurringDay || 1)}`;
+        break;
+      case 'yearly':
+        intervalText = 'Yearly on the same date';
+        break;
+    }
+
+    const endText = recurringEndDate ? ` until ${new Date(recurringEndDate).toLocaleDateString()}` : '';
+    return `${intervalText}${endText}`;
+  };
+
+  const getOrdinalSuffix = (day: number) => {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card style={{ padding: 20, alignItems: 'center' }}>
+        <Typography variant="body2">Loading recurring transactions...</Typography>
+      </Card>
+    );
+  }
+
+  return (
+    <View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Typography variant="h5" style={{ color: theme.colors.text }}>
+          Recurring Transactions
+        </Typography>
+        <Button
+          variant="outline"
+          onPress={processRecurringTransactions}
+          disabled={isProcessing}
+          loading={isProcessing}
+        >
+          Process Due
+        </Button>
+      </View>
+
+      {recurringTransactions.length === 0 ? (
+        <Card style={{ padding: 20, alignItems: 'center' }}>
+          <Ionicons name="repeat-outline" size={48} color={theme.colors.textSecondary} />
+          <Typography variant="body2" style={{ color: theme.colors.textSecondary, marginTop: 12, textAlign: 'center' }}>
+            No recurring transactions set up yet.
+            Create one to automate your regular income or expenses.
+          </Typography>
+        </Card>
+      ) : (
+        <ScrollView style={{ maxHeight: 400 }}>
+          {recurringTransactions.map((transaction) => {
+            const recurringInfo = formatRecurringInfo(transaction);
+            return (
+              <Card key={transaction.id} style={{ marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Typography variant="body1" style={{ color: theme.colors.text, fontWeight: '600' }}>
+                        {transaction.description}
+                      </Typography>
+                      <View style={{
+                        backgroundColor: transaction.type === 'income' ? theme.colors.success : theme.colors.error,
+                        paddingHorizontal: 8,
+                        paddingVertical: 2,
+                        borderRadius: 12,
+                        marginLeft: 8,
+                      }}>
+                        <Typography variant="caption" style={{ color: '#FFFFFF' }}>
+                          {transaction.type.toUpperCase()}
+                        </Typography>
+                      </View>
+                    </View>
+                    
+                    <Typography variant="h6" style={{ 
+                      color: transaction.type === 'income' ? theme.colors.success : theme.colors.error,
+                      marginBottom: 4,
+                    }}>
+                      ${transaction.amount.toFixed(2)}
+                    </Typography>
+                    
+                    {recurringInfo && (
+                      <Typography variant="body2" style={{ color: theme.colors.textSecondary }}>
+                        {recurringInfo}
+                      </Typography>
+                    )}
+                  </View>
+                  
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {onTransactionSelect && (
+                      <TouchableOpacity
+                        style={{
+                          padding: 8,
+                          backgroundColor: theme.colors.primary,
+                          borderRadius: 8,
+                        }}
+                        onPress={() => onTransactionSelect(transaction)}
+                      >
+                        <Ionicons name="pencil" size={16} color="#FFFFFF" />
+                      </TouchableOpacity>
+                    )}
+                    
+                    <TouchableOpacity
+                      style={{
+                        padding: 8,
+                        backgroundColor: theme.colors.error,
+                        borderRadius: 8,
+                      }}
+                      onPress={() => deleteRecurringTransaction(transaction)}
+                    >
+                      <Ionicons name="trash" size={16} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Card>
+            );
+          })}
+        </ScrollView>
+      )}
+    </View>
+  );
+};
+
+export default RecurringTransactionManager;
