@@ -28,6 +28,8 @@ import {
   Label,
   Stack
 } from '../src/design-system';
+import { RecurringTransactionForm, RecurringOptions } from '../src/components/transaction/RecurringTransactionForm';
+import { firebaseTransactionService } from '../src/services/firebase';
 
 interface FormData {
   amount: string;
@@ -37,6 +39,7 @@ interface FormData {
   date: Date;
   notes?: string;
   location?: string;
+  recurring: RecurringOptions;
 }
 
 interface FormErrors {
@@ -61,6 +64,10 @@ const AdvancedAddTransactionScreen: React.FC = () => {
       date: new Date(),
       notes: '',
       location: '',
+      recurring: {
+        isRecurring: false,
+        interval: 'monthly',
+      },
     };
 
     // Handle prefilled data
@@ -136,15 +143,29 @@ const AdvancedAddTransactionScreen: React.FC = () => {
         type: formData.type,
         date: formData.date,
         notes: formData.notes,
-        location: formData.location,
+        accountId: 'default-account', // TODO: Get from user selection
       };
 
-      // TODO: Save transaction using your service
-      console.log('Transaction data:', transactionData);
+      if (formData.recurring.isRecurring) {
+        // Create recurring transaction
+        const recurringOptions = {
+          interval: formData.recurring.interval,
+          dayOfMonth: formData.recurring.dayOfMonth,
+          dayOfWeek: formData.recurring.dayOfWeek,
+          endDate: formData.recurring.endDate,
+        };
+        
+        await firebaseTransactionService.createRecurring(transactionData, recurringOptions);
+      } else {
+        // Create regular transaction
+        await firebaseTransactionService.create(transactionData);
+      }
       
       Alert.alert(
         'Success',
-        'Transaction created successfully!',
+        formData.recurring.isRecurring 
+          ? 'Recurring transaction created successfully!' 
+          : 'Transaction created successfully!',
         [
           {
             text: 'OK',
@@ -341,6 +362,13 @@ const AdvancedAddTransactionScreen: React.FC = () => {
               </TouchableOpacity>
             </Card>
 
+            {/* Recurring Transaction Form */}
+            <RecurringTransactionForm
+              value={formData.recurring}
+              onChange={(recurring) => setFormData({ ...formData, recurring })}
+              transactionType={formData.type}
+            />
+
             {/* Advanced Options */}
             <Card variant="default">
               <TouchableOpacity
@@ -405,7 +433,7 @@ const AdvancedAddTransactionScreen: React.FC = () => {
               loading={isLoading}
               style={{ marginTop: tokens.Spacing.md }}
             >
-              {isLoading ? 'Creating...' : 'Create Transaction'}
+              {isLoading ? 'Creating...' : formData.recurring.isRecurring ? 'Create Recurring Transaction' : 'Create Transaction'}
             </Button>
           </Stack>
         </ScrollView>
