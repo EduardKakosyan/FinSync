@@ -1,10 +1,10 @@
 /**
  * Transaction Data Service for FinSync Financial App
  * Handles CRUD operations for financial transactions
+ * Updated to use Firebase backend
  */
 
-import BaseDataService from './BaseDataService';
-import { STORAGE_KEYS } from './StorageKeys';
+import { firebaseTransactionService } from '../firebase';
 import {
   Transaction,
   ValidationResult,
@@ -17,15 +17,13 @@ import {
 } from '../../types';
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
-export class TransactionService extends BaseDataService<Transaction> {
-  constructor() {
-    super(STORAGE_KEYS.TRANSACTIONS, 'transaction');
-  }
+export class TransactionService {
+  private firebaseService = firebaseTransactionService;
 
   /**
    * Validate transaction data
    */
-  protected validateEntity(transaction: Partial<Transaction>): ValidationResult {
+  private validateEntity(transaction: Partial<Transaction>): ValidationResult {
     const errors: ValidationError[] = [];
 
     // Required fields validation
@@ -105,77 +103,132 @@ export class TransactionService extends BaseDataService<Transaction> {
   }
 
   /**
-   * Transform transaction for storage (handle Date serialization)
+   * Create a new transaction
    */
-  protected transformForStorage(transaction: Transaction): any {
-    return {
-      ...transaction,
-      date: transaction.date.toISOString(),
-      createdAt: transaction.createdAt.toISOString(),
-      updatedAt: transaction.updatedAt?.toISOString(),
-    };
+  async create(transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>): Promise<Transaction> {
+    const validation = this.validateEntity(transaction);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+    }
+    return this.firebaseService.create(transaction);
   }
 
   /**
-   * Transform transaction from storage (parse Date objects)
+   * Get a transaction by ID
    */
-  protected transformFromStorage(data: any): Transaction {
-    return {
-      ...data,
-      date: new Date(data.date),
-      createdAt: new Date(data.createdAt),
-      updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
-    };
+  async getById(id: string): Promise<Transaction | null> {
+    return this.firebaseService.getById(id);
+  }
+
+  /**
+   * Get all transactions
+   */
+  async getAll(): Promise<Transaction[]> {
+    const { transactions } = await this.firebaseService.getAll();
+    return transactions;
+  }
+
+  /**
+   * Update a transaction
+   */
+  async update(id: string, updates: Partial<Transaction>): Promise<Transaction> {
+    const validation = this.validateEntity(updates);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+    }
+    return this.firebaseService.update(id, updates);
+  }
+
+  /**
+   * Delete a transaction
+   */
+  async delete(id: string): Promise<void> {
+    return this.firebaseService.delete(id);
   }
 
   /**
    * Get transactions by date range
    */
   async getByDateRange(startDate: Date, endDate: Date): Promise<Transaction[]> {
-    const transactions = await this.getAll();
-    return transactions.filter(transaction =>
-      isWithinInterval(transaction.date, { start: startDate, end: endDate })
-    );
+    return this.firebaseService.getByDateRange(startDate, endDate);
   }
 
   /**
    * Get transactions by category
    */
   async getByCategory(categoryId: string): Promise<Transaction[]> {
-    const transactions = await this.getAll();
-    return transactions.filter(transaction => transaction.category === categoryId);
+    const { transactions } = await this.firebaseService.getAll({ category: categoryId });
+    return transactions;
   }
 
   /**
    * Get transactions by account
    */
   async getByAccount(accountId: string): Promise<Transaction[]> {
-    const transactions = await this.getAll();
-    return transactions.filter(transaction => transaction.accountId === accountId);
+    const { transactions } = await this.firebaseService.getAll({ accountId });
+    return transactions;
   }
 
   /**
    * Get transactions by type
    */
   async getByType(type: 'income' | 'expense'): Promise<Transaction[]> {
-    const transactions = await this.getAll();
-    return transactions.filter(transaction => transaction.type === type);
+    const { transactions } = await this.firebaseService.getAll({ type });
+    return transactions;
   }
 
   /**
    * Get recent transactions
    */
   async getRecent(limit: number = 10): Promise<Transaction[]> {
-    const transactions = await this.getAll();
-    return transactions
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .slice(0, limit);
+    const { transactions } = await this.firebaseService.getAll({ limit });
+    return transactions;
   }
 
   /**
    * Calculate spending data for a date range
    */
   async calculateSpendingData(dateRange: DateRange): Promise<SpendingData> {
+    return this.firebaseService.calculateSpendingData(dateRange);
+  }
+
+  /**
+   * Create a recurring transaction
+   */
+  async createRecurring(
+    transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>,
+    recurringOptions: {
+      interval: 'monthly' | 'weekly' | 'yearly';
+      dayOfMonth?: number;
+      dayOfWeek?: number;
+      endDate?: Date;
+    }
+  ): Promise<Transaction> {
+    const validation = this.validateEntity(transaction);
+    if (!validation.isValid) {
+      throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+    }
+    return this.firebaseService.createRecurring(transaction, recurringOptions);
+  }
+
+  /**
+   * Get recurring transactions
+   */
+  async getRecurringTransactions(): Promise<Transaction[]> {
+    return this.firebaseService.getRecurringTransactions();
+  }
+
+  /**
+   * Process recurring transactions
+   */
+  async processRecurringTransactions(): Promise<number> {
+    return this.firebaseService.processRecurringTransactions();
+  }
+
+  /**
+   * Legacy method implementations for compatibility
+   */
+  private async calculateSpendingDataLegacy(dateRange: DateRange): Promise<SpendingData> {
     const transactions = await this.getByDateRange(dateRange.startDate, dateRange.endDate);
     
     const income = transactions
@@ -341,27 +394,51 @@ export class TransactionService extends BaseDataService<Transaction> {
   }
 
   /**
-   * Enhanced text search for transactions
+   * Search transactions
    */
-  protected filterByText(transactions: Transaction[], text: string): Transaction[] {
-    const searchTerm = text.toLowerCase();
-    return transactions.filter(transaction =>
-      transaction.description.toLowerCase().includes(searchTerm) ||
-      transaction.category.toLowerCase().includes(searchTerm) ||
-      transaction.amount.toString().includes(searchTerm)
-    );
-  }
+  async search(query: SearchQuery): Promise<Transaction[]> {
+    // For now, get all and filter client-side
+    // TODO: Implement server-side search with Firebase
+    const { transactions } = await this.firebaseService.getAll();
+    let filtered = transactions;
 
-  /**
-   * Enhanced date range filtering
-   */
-  protected filterByDateRange(transactions: Transaction[], dateRange: DateRange): Transaction[] {
-    return transactions.filter(transaction =>
-      isWithinInterval(transaction.date, {
-        start: dateRange.startDate,
-        end: dateRange.endDate,
-      })
-    );
+    if (query.text) {
+      const searchTerm = query.text.toLowerCase();
+      filtered = filtered.filter(transaction =>
+        transaction.description.toLowerCase().includes(searchTerm) ||
+        transaction.category.toLowerCase().includes(searchTerm) ||
+        transaction.amount.toString().includes(searchTerm)
+      );
+    }
+
+    if (query.dateRange) {
+      filtered = filtered.filter(transaction =>
+        isWithinInterval(transaction.date, {
+          start: query.dateRange!.startDate,
+          end: query.dateRange!.endDate,
+        })
+      );
+    }
+
+    if (query.categories && query.categories.length > 0) {
+      filtered = filtered.filter(transaction =>
+        query.categories!.includes(transaction.category)
+      );
+    }
+
+    if (query.minAmount !== undefined) {
+      filtered = filtered.filter(transaction => transaction.amount >= query.minAmount!);
+    }
+
+    if (query.maxAmount !== undefined) {
+      filtered = filtered.filter(transaction => transaction.amount <= query.maxAmount!);
+    }
+
+    if (query.type) {
+      filtered = filtered.filter(transaction => transaction.type === query.type);
+    }
+
+    return filtered;
   }
 
   /**

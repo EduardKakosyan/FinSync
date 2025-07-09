@@ -10,16 +10,26 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "../hooks/useColorScheme";
 import { ThemeProvider } from "../src/design-system";
+import { useFirebaseMigration } from "../src/hooks/useFirebaseMigration";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+  
+  // Run Firebase migration on app startup
+  const { isMigrating, migrationComplete, error } = useFirebaseMigration();
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  if (!loaded || isMigrating) {
+    // Wait for fonts to load and migration to complete
     return null;
+  }
+  
+  if (error) {
+    console.error('Migration error:', error);
+    // Continue loading the app even if migration fails
+    // The app will continue using local storage
   }
 
   return (
