@@ -54,6 +54,8 @@ export function useFirebaseMigration(): UseMigrationResult {
       } catch (err) {
         console.error('Migration failed:', err);
         setError(err instanceof Error ? err.message : 'Unknown migration error');
+        // Mark as complete even if failed, so app can still load
+        setMigrationComplete(true);
       } finally {
         setIsMigrating(false);
       }

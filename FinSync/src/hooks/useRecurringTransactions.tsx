@@ -84,8 +84,14 @@ export function useRecurringTransactions(): UseRecurringTransactionsResult {
   };
 
   const checkAndProcessRecurringTransactions = async () => {
-    if (shouldProcessRecurring(lastProcessed)) {
-      await processRecurringTransactions();
+    try {
+      if (shouldProcessRecurring(lastProcessed)) {
+        await processRecurringTransactions();
+      }
+    } catch (error) {
+      // Don't let recurring transaction errors block app startup
+      console.warn('Recurring transaction check failed:', error);
+      setError(error instanceof Error ? error.message : 'Failed to check recurring transactions');
     }
   };
 

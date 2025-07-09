@@ -5,13 +5,14 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "com.anonymous.FinSync",
+    "scheme": "com.eduardkakosyan.finsync",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "owner": "eduardkakosyan",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.FinSync",
+      "bundleIdentifier": "com.eduardkakosyan.finsync",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSCameraUsageDescription": "FinSync needs access to your camera to scan receipts and capture transaction images.",
         "NSPhotoLibraryUsageDescription": "FinSync needs access to your photo library to select receipt images."
@@ -23,7 +24,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.FinSync",
+      "package": "com.eduardkakosyan.finsync",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",

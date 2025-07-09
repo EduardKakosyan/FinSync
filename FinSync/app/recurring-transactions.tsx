@@ -120,3 +120,5 @@ export default function RecurringTransactionsScreen() {
     </SafeAreaView>
   );
 }
+
+export default RecurringTransactionsScreen;
