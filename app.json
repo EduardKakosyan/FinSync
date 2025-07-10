@@ -19,6 +19,9 @@
       "bundleIdentifier": "com.eduardkakosyan.finsync",
       "config": {
         "googleMapsApiKey": ""
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -30,6 +33,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4719fe5e-7635-4951-9cb4-02a16e98e40d"
+      }
     }
   }
 }
