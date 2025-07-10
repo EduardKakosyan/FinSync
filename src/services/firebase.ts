@@ -13,10 +13,14 @@ import {
   DocumentData,
   deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
+  connectFirestoreEmulator,
+  enableNetwork,
+  disableNetwork
 } from 'firebase/firestore';
 import { Transaction } from '../types';
 import { firebaseConfig } from '../config/env';
+import { retryWithExponentialBackoff, handleFirebaseError } from '../utils/firebaseErrorHandler';
 
 let app: any;
 let db: any;
@@ -26,11 +30,20 @@ export const initializeFirebase = async () => {
     if (!app) {
       app = initializeApp(firebaseConfig);
       db = getFirestore(app);
+      
+      // Enable offline persistence and improved connection handling
+      try {
+        await enableNetwork(db);
+        console.log('✅ Firebase network enabled successfully');
+      } catch (networkError) {
+        console.warn('⚠️ Firebase network enable failed:', networkError);
+        // Continue without network - offline mode will work
+      }
     }
     
     return { app, db };
   } catch (error) {
-    console.error('Firebase initialization error:', error);
+    console.error('❌ Firebase initialization error:', error);
     throw error;
   }
 };
@@ -39,7 +52,7 @@ export const initializeFirebase = async () => {
 export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
   if (!db) await initializeFirebase();
   
-  try {
+  return retryWithExponentialBackoff(async () => {
     const docRef = await addDoc(collection(db, 'transactions'), {
       ...transaction,
       date: Timestamp.fromDate(transaction.date),
@@ -47,11 +60,9 @@ export const addTransaction = async (transaction: Omit<Transaction, 'id' | 'crea
       updatedAt: Timestamp.now(),
     });
     
+    console.log('✅ Transaction added successfully:', docRef.id);
     return docRef.id;
-  } catch (error) {
-    console.error('Error adding transaction:', error);
-    throw error;
-  }
+  });
 };
 
 export const getTransactions = async (startDate?: Date, endDate?: Date): Promise<Transaction[]> => {
