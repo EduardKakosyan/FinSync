@@ -18,16 +18,18 @@ export default function MainScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [period, setPeriod] = useState<TransactionPeriod>('daily');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false to show UI immediately
 
   useEffect(() => {
     // Initialize Firebase
     initializeFirebase()
       .then(() => {
+        console.log('Firebase initialized successfully');
         setIsLoading(false);
       })
       .catch((error) => {
         console.error('Failed to initialize Firebase:', error);
+        // Still set loading to false to show the UI
         setIsLoading(false);
       });
   }, []);
