@@ -33,7 +33,6 @@ yarn-error.*
 *.tsbuildinfo
 
 # expo generated
-expo-env.d.ts
 
 # Claude Flow
 .hive-mind/
