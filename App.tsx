@@ -11,8 +11,13 @@ import TransactionList from './src/components/TransactionList';
 import TaxSummary from './src/components/TaxSummary';
 import ConnectionStatus from './src/components/ConnectionStatus';
 import { connectionMonitor } from './src/utils/connectionMonitor';
+import { logAppStart, debugLogger } from './src/utils/debugLogger';
 
 export default function App() {
+  // Log app startup immediately
+  logAppStart();
+  debugLogger.ios('App component rendering');
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<TransactionPeriod>('daily');
@@ -21,14 +26,21 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    debugLogger.firebase('Starting Firebase initialization in useEffect');
+    
     initializeFirebase()
       .then(({ db }) => {
+        debugLogger.firebase('Firebase initialization successful, setting up subscriptions');
+        
         // Initialize connection monitor with database instance
         connectionMonitor.initialize(db);
         
         const { startDate, endDate } = getDateRange(selectedPeriod);
+        debugLogger.log('Date range for transactions', { startDate, endDate, period: selectedPeriod });
+        
         const unsubscribe = subscribeToTransactions(
           (transactionData) => {
+            debugLogger.log('Received transaction data', { count: transactionData.length });
             setTransactions(transactionData);
             setFilteredTransactions(transactionData);
             setIsLoading(false);
@@ -39,6 +51,11 @@ export default function App() {
         return unsubscribe;
       })
       .catch((error) => {
+        debugLogger.error('Firebase initialization failed in App component', {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
         console.error('Firebase initialization failed:', error);
         setError(`Failed to connect to database: ${error.message}`);
         setIsLoading(false);
@@ -124,8 +141,10 @@ export default function App() {
                 setIsLoading(true);
                 // Trigger re-initialization
                 const { startDate, endDate } = getDateRange(selectedPeriod);
+                debugLogger.log('Retrying Firebase initialization');
                 initializeFirebase()
                   .then(({ db }) => {
+                    debugLogger.log('Firebase retry successful');
                     connectionMonitor.initialize(db);
                     const unsubscribe = subscribeToTransactions(
                       (transactionData) => {
@@ -139,6 +158,7 @@ export default function App() {
                     return unsubscribe;
                   })
                   .catch((retryError) => {
+                    debugLogger.error('Firebase retry failed', retryError);
                     setError(`Failed to connect to database: ${retryError.message}`);
                     setIsLoading(false);
                   });

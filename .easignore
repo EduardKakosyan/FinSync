@@ -1,0 +1,37 @@
+# EAS Build ignore file
+# This file specifies which files should be ignored during EAS builds
+
+# Local environment files (these should be ignored)
+.env
+.env.local
+.env.*.local
+
+# Development and testing
+*.test.*
+*.spec.*
+__tests__/
+.jest/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Claude Flow
+.hive-mind/
+.swarm/
+memory/
+coordination/
+
+# Build outputs (will be regenerated)
+ios/FinSync/GoogleService-Info.plist
