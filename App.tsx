@@ -18,6 +18,7 @@ export default function App() {
   const [selectedPeriod, setSelectedPeriod] = useState<TransactionPeriod>('daily');
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     initializeFirebase()
@@ -39,7 +40,7 @@ export default function App() {
       })
       .catch((error) => {
         console.error('Firebase initialization failed:', error);
-        Alert.alert('Error', 'Failed to connect to database');
+        setError(`Failed to connect to database: ${error.message}`);
         setIsLoading(false);
       });
   }, [selectedPeriod]);
@@ -113,7 +114,40 @@ export default function App() {
       <TaxSummary transactions={filteredTransactions} period={selectedPeriod} />
 
       <View style={styles.content}>
-        {isLoading ? (
+        {error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={() => {
+                setError(null);
+                setIsLoading(true);
+                // Trigger re-initialization
+                const { startDate, endDate } = getDateRange(selectedPeriod);
+                initializeFirebase()
+                  .then(({ db }) => {
+                    connectionMonitor.initialize(db);
+                    const unsubscribe = subscribeToTransactions(
+                      (transactionData) => {
+                        setTransactions(transactionData);
+                        setFilteredTransactions(transactionData);
+                        setIsLoading(false);
+                      },
+                      startDate,
+                      endDate
+                    );
+                    return unsubscribe;
+                  })
+                  .catch((retryError) => {
+                    setError(`Failed to connect to database: ${retryError.message}`);
+                    setIsLoading(false);
+                  });
+              }}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : isLoading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Loading transactions...</Text>
           </View>
@@ -243,6 +277,29 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: Typography.fontSize.base,
     color: Colors.text.secondary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
+  },
+  errorText: {
+    fontSize: Typography.fontSize.base,
+    color: Colors.danger,
+    textAlign: 'center',
+    marginBottom: SPACING.md,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.medium,
   },
   addButton: {
     position: 'absolute',
