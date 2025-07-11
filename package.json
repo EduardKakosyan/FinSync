@@ -9,11 +9,16 @@
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "build:ios": "expo prebuild --platform ios && expo run:ios --configuration Release",
+    "build:android": "expo prebuild --platform android && expo run:android --variant release",
+    "build:web": "expo export:web",
+    "prebuild": "expo prebuild --clean"
   },
   "dependencies": {
     "@firebase/firestore": "^4.8.0",
     "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-community/netinfo": "^11.4.1",
     "@types/react": "~19.0.10",
     "expo": "~53.0.0",
     "expo-status-bar": "~2.2.3",

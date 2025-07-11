@@ -15,6 +15,10 @@ export const Colors = {
   dangerLight: '#F87171',
   dangerDark: '#DC2626',
   
+  warning: '#F59E0B', // Amber - for warnings and connection issues
+  warningLight: '#FCD34D',
+  warningDark: '#D97706',
+  
   background: '#FAFAFA',
   surface: '#FFFFFF',
   surfaceLight: '#F9FAFB',

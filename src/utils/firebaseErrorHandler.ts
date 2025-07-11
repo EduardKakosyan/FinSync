@@ -10,13 +10,33 @@ export interface ErrorInfo {
 export const handleFirebaseError = (error: any): ErrorInfo => {
   console.error('🔥 Firebase Error:', error);
 
+  // WebChannelConnection RPC error - specific handling
+  if (error.message?.includes('WebChannelConnection') || error.message?.includes('RPC')) {
+    return {
+      title: 'Syncing Data',
+      message: 'Reconnecting to server. Your data is safe and will sync automatically.',
+      isRetryable: true,
+      suggestedAction: 'Connection will recover automatically'
+    };
+  }
+
+  // WebSocket connection errors
+  if (error.message?.includes('WebSocket') || error.message?.includes('transport')) {
+    return {
+      title: 'Connection Issue',
+      message: 'Real-time sync temporarily unavailable. Switching to polling mode.',
+      isRetryable: true,
+      suggestedAction: 'Connection will recover automatically'
+    };
+  }
+
   // Network/Connection errors
   if (error.code === 'unavailable' || error.message?.includes('transport')) {
     return {
       title: 'Connection Issue',
-      message: 'Unable to connect to server. Check your internet connection.',
+      message: 'Working in offline mode. Changes will sync when reconnected.',
       isRetryable: true,
-      suggestedAction: 'Check internet connection and try again'
+      suggestedAction: 'Check internet connection'
     };
   }
 
@@ -87,4 +107,48 @@ export const retryWithExponentialBackoff = async <T>(
   }
 
   throw lastError;
+};
+
+// Wrapper for Firestore operations that handles WebChannel errors
+export const withConnectionResilience = async <T>(
+  operation: () => Promise<T>,
+  fallbackOperation?: () => Promise<T>
+): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    const errorInfo = handleFirebaseError(error);
+    
+    // For WebChannel errors, try fallback if available
+    if (errorInfo.isRetryable && (error.message?.includes('WebChannelConnection') || error.message?.includes('RPC'))) {
+      console.log('🔄 WebChannel error detected, attempting fallback...');
+      
+      if (fallbackOperation) {
+        try {
+          return await fallbackOperation();
+        } catch (fallbackError) {
+          console.error('❌ Fallback operation also failed:', fallbackError);
+          throw error; // Throw original error
+        }
+      }
+    }
+    
+    throw error;
+  }
+};
+
+// Check if error is related to WebChannel/RPC issues
+export const isWebChannelError = (error: any): boolean => {
+  return error.message?.includes('WebChannelConnection') || 
+         error.message?.includes('RPC') || 
+         error.message?.includes('WebSocket') ||
+         error.message?.includes('transport');
+};
+
+// Get user-friendly error message for WebChannel issues
+export const getWebChannelErrorMessage = (error: any): string => {
+  if (isWebChannelError(error)) {
+    return 'Connection interrupted. Switching to offline mode temporarily.';
+  }
+  return 'An error occurred while syncing data.';
 };
