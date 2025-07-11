@@ -9,6 +9,8 @@ import { getDateRange, formatCurrency } from './src/utils/dateHelpers';
 import TransactionForm from './src/components/TransactionForm';
 import TransactionList from './src/components/TransactionList';
 import TaxSummary from './src/components/TaxSummary';
+import ConnectionStatus from './src/components/ConnectionStatus';
+import { connectionMonitor } from './src/utils/connectionMonitor';
 
 export default function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -19,7 +21,10 @@ export default function App() {
 
   useEffect(() => {
     initializeFirebase()
-      .then(() => {
+      .then(({ db }) => {
+        // Initialize connection monitor with database instance
+        connectionMonitor.initialize(db);
+        
         const { startDate, endDate } = getDateRange(selectedPeriod);
         const unsubscribe = subscribeToTransactions(
           (transactionData) => {
@@ -38,6 +43,13 @@ export default function App() {
         setIsLoading(false);
       });
   }, [selectedPeriod]);
+
+  // Cleanup connection monitor on unmount
+  useEffect(() => {
+    return () => {
+      connectionMonitor.cleanup();
+    };
+  }, []);
 
   const handlePeriodChange = (period: TransactionPeriod) => {
     setSelectedPeriod(period);
@@ -61,6 +73,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
+      <ConnectionStatus />
       
       <View style={styles.header}>
         <Text style={styles.title}>FinSync</Text>
@@ -147,6 +160,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+    position: 'relative',
   },
   header: {
     backgroundColor: Colors.surface,

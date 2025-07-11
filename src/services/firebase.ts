@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { 
-  getFirestore, 
+  initializeFirestore,
   collection, 
   addDoc, 
   getDocs, 
@@ -16,11 +16,13 @@ import {
   updateDoc,
   connectFirestoreEmulator,
   enableNetwork,
-  disableNetwork
+  disableNetwork,
+  CACHE_SIZE_UNLIMITED
 } from 'firebase/firestore';
 import { Transaction } from '../types';
 import { firebaseConfig } from '../config/env';
-import { retryWithExponentialBackoff, handleFirebaseError } from '../utils/firebaseErrorHandler';
+import { retryWithExponentialBackoff, handleFirebaseError, isWebChannelError } from '../utils/firebaseErrorHandler';
+import { getPollingService } from './firebasePolling';
 
 let app: any;
 let db: any;
@@ -29,15 +31,42 @@ export const initializeFirebase = async () => {
   try {
     if (!app) {
       app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
       
-      // Enable offline persistence and improved connection handling
+      // Initialize Firestore with proper settings for real-time listeners
       try {
-        await enableNetwork(db);
-        console.log('✅ Firebase network enabled successfully');
-      } catch (networkError) {
-        console.warn('⚠️ Firebase network enable failed:', networkError);
-        // Continue without network - offline mode will work
+        db = initializeFirestore(app, {
+          // Don't force long polling - use WebSockets for real-time updates
+          experimentalForceLongPolling: false,
+          useFetchStreams: false,
+          merge: true
+        });
+        console.log('✅ Firebase initialized with WebSocket support');
+      } catch (error) {
+        console.log('Falling back to standard getFirestore');
+        const { getFirestore } = await import('firebase/firestore');
+        db = getFirestore(app);
+      }
+      
+      // Note: IndexedDB persistence is not available in React Native
+      // The SDK will automatically use memory cache for offline support
+      console.log('✅ Firebase initialized with memory cache for offline support');
+      
+      // Enable network with retry
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (retries < maxRetries) {
+        try {
+          await enableNetwork(db);
+          console.log('✅ Firebase network enabled successfully');
+          break;
+        } catch (networkError) {
+          retries++;
+          console.warn(`⚠️ Firebase network enable attempt ${retries}/${maxRetries} failed:`, networkError);
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          }
+        }
       }
     }
     
@@ -137,6 +166,15 @@ export const subscribeToTransactions = (
     return () => {};
   }
   
+  const pollingService = getPollingService(db);
+  
+  // Check if we should use polling mode (after WebChannel failures)
+  if (pollingService.isInPollingMode()) {
+    console.log('🔄 Using polling mode for transactions subscription');
+    return pollingService.subscribeToTransactionsPolling(callback, startDate, endDate, 3000);
+  }
+  
+  // Try real-time listeners first
   let q = query(collection(db, 'transactions'), orderBy('date', 'desc'));
   
   if (startDate && endDate) {
@@ -148,20 +186,59 @@ export const subscribeToTransactions = (
     );
   }
   
-  return onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
-    const transactions: Transaction[] = [];
+  let hasWebChannelError = false;
+  
+  const unsubscribe = onSnapshot(q, 
+    (querySnapshot: QuerySnapshot<DocumentData>) => {
+      const transactions: Transaction[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        transactions.push({
+          id: doc.id,
+          ...data,
+          date: data.date.toDate(),
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
+        } as Transaction);
+      });
+      
+      callback(transactions);
+    },
+    (error) => {
+      console.error('❌ Firestore listener error:', error);
+      
+      // Handle WebChannel errors by switching to polling mode
+      if (isWebChannelError(error)) {
+        console.log('🔄 WebChannel error detected, switching to polling mode');
+        hasWebChannelError = true;
+        
+        // Enable polling mode globally
+        pollingService.enablePollingMode();
+        
+        // Unsubscribe from real-time listener
+        if (unsubscribe) {
+          unsubscribe();
+        }
+        
+        // Start polling fallback
+        return pollingService.subscribeToTransactionsPolling(callback, startDate, endDate, 3000);
+      } else {
+        // Handle other types of errors
+        handleFirebaseError(error);
+      }
+    }
+  );
+  
+  // Return cleanup function that handles both modes
+  return () => {
+    if (hasWebChannelError) {
+      // Already switched to polling, cleanup will be handled by polling service
+      return;
+    }
     
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      transactions.push({
-        id: doc.id,
-        ...data,
-        date: data.date.toDate(),
-        createdAt: data.createdAt.toDate(),
-        updatedAt: data.updatedAt.toDate(),
-      } as Transaction);
-    });
-    
-    callback(transactions);
-  });
+    if (unsubscribe) {
+      unsubscribe();
+    }
+  };
 };
