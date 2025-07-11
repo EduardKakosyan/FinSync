@@ -1,11 +1,17 @@
+# Firebase and environment files
 firebase.json
-.env.local
 .env
 .env.*
+.env.local
+.env.production
+.env.development
 eas.json
 app.config.js
 **/firebase.config.ts
 **/firebase.config.js
+**/*firebase*.config.*
+**/secrets.*
+**/credentials.*
 
 # dependencies
 node_modules/
