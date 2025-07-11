@@ -30,6 +30,19 @@ let db: any;
 export const initializeFirebase = async () => {
   try {
     if (!app) {
+      // Validate Firebase config before initialization
+      const requiredFields = ['apiKey', 'authDomain', 'projectId', 'appId'];
+      const missingFields = requiredFields.filter(field => !firebaseConfig[field as keyof typeof firebaseConfig]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required Firebase config fields: ${missingFields.join(', ')}`);
+      }
+      
+      console.log('🔧 Initializing Firebase with config:', {
+        ...firebaseConfig,
+        apiKey: firebaseConfig.apiKey ? '***' + firebaseConfig.apiKey.slice(-4) : 'MISSING'
+      });
+      
       app = initializeApp(firebaseConfig);
       
       // Initialize Firestore with proper settings for real-time listeners

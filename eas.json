@@ -6,13 +6,40 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCSRpxQl0grr9gpz3y7SszAE7zgq49Z06g",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "finsync-v2.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "finsync-v2",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "finsync-v2.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "418670155712",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:418670155712:ios:d105ffe2d7cfa62ca69a25",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-VQ7GKW6DC9"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCSRpxQl0grr9gpz3y7SszAE7zgq49Z06g",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "finsync-v2.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "finsync-v2",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "finsync-v2.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "418670155712",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:418670155712:ios:d105ffe2d7cfa62ca69a25",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-VQ7GKW6DC9"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCSRpxQl0grr9gpz3y7SszAE7zgq49Z06g",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "finsync-v2.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "finsync-v2",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "finsync-v2.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "418670155712",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:418670155712:ios:d105ffe2d7cfa62ca69a25",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-VQ7GKW6DC9"
+      }
     }
   },
   "submit": {
