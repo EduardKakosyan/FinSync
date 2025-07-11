@@ -23,41 +23,64 @@ import { Transaction } from '../types';
 import { firebaseConfig } from '../config/env';
 import { retryWithExponentialBackoff, handleFirebaseError, isWebChannelError } from '../utils/firebaseErrorHandler';
 import { getPollingService } from './firebasePolling';
+import { logFirebaseInit, logFirebaseSuccess, logFirebaseError, debugLogger } from '../utils/debugLogger';
 
 let app: any;
 let db: any;
 
 export const initializeFirebase = async () => {
   try {
+    debugLogger.firebase('initializeFirebase called');
+    
     if (!app) {
+      debugLogger.firebase('No existing app, creating new Firebase app');
+      
       // Validate Firebase config before initialization
       const requiredFields = ['apiKey', 'authDomain', 'projectId', 'appId'];
       const missingFields = requiredFields.filter(field => !firebaseConfig[field as keyof typeof firebaseConfig]);
       
+      debugLogger.firebase('Firebase config validation', {
+        hasApiKey: !!firebaseConfig.apiKey,
+        hasAuthDomain: !!firebaseConfig.authDomain,
+        hasProjectId: !!firebaseConfig.projectId,
+        hasAppId: !!firebaseConfig.appId,
+        missingFields
+      });
+      
       if (missingFields.length > 0) {
-        throw new Error(`Missing required Firebase config fields: ${missingFields.join(', ')}`);
+        const errorMsg = `Missing required Firebase config fields: ${missingFields.join(', ')}`;
+        debugLogger.error('Firebase config validation failed', { missingFields });
+        throw new Error(errorMsg);
       }
+      
+      logFirebaseInit(firebaseConfig);
       
       console.log('🔧 Initializing Firebase with config:', {
         ...firebaseConfig,
         apiKey: firebaseConfig.apiKey ? '***' + firebaseConfig.apiKey.slice(-4) : 'MISSING'
       });
       
+      debugLogger.firebase('Calling initializeApp with config');
       app = initializeApp(firebaseConfig);
+      debugLogger.firebase('initializeApp completed successfully');
       
       // Initialize Firestore with proper settings for real-time listeners
       try {
+        debugLogger.firebase('Initializing Firestore with custom settings');
         db = initializeFirestore(app, {
           // Don't force long polling - use WebSockets for real-time updates
           experimentalForceLongPolling: false,
           useFetchStreams: false,
           merge: true
         });
+        debugLogger.firebase('Firestore initialized with WebSocket support');
         console.log('✅ Firebase initialized with WebSocket support');
       } catch (error) {
+        debugLogger.error('Failed to initialize Firestore with custom settings, falling back', error);
         console.log('Falling back to standard getFirestore');
         const { getFirestore } = await import('firebase/firestore');
         db = getFirestore(app);
+        debugLogger.firebase('Fallback to standard getFirestore completed');
       }
       
       // Note: IndexedDB persistence is not available in React Native
@@ -71,20 +94,32 @@ export const initializeFirebase = async () => {
       while (retries < maxRetries) {
         try {
           await enableNetwork(db);
+          debugLogger.firebase('Firebase network enabled successfully');
           console.log('✅ Firebase network enabled successfully');
           break;
         } catch (networkError) {
           retries++;
+          debugLogger.error(`Firebase network enable attempt ${retries}/${maxRetries} failed`, networkError);
           console.warn(`⚠️ Firebase network enable attempt ${retries}/${maxRetries} failed:`, networkError);
           if (retries < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * retries));
           }
         }
       }
+    } else {
+      debugLogger.firebase('Using existing Firebase app instance');
     }
     
+    logFirebaseSuccess();
+    debugLogger.firebase('Firebase initialization completed successfully');
     return { app, db };
   } catch (error) {
+    logFirebaseError(error);
+    debugLogger.error('Firebase initialization failed', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     console.error('❌ Firebase initialization error:', error);
     throw error;
   }

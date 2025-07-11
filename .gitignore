@@ -41,6 +41,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# Firebase iOS Configuration (generated during build)
+ios/FinSync/GoogleService-Info.plist
+
 # typescript
 *.tsbuildinfo
 

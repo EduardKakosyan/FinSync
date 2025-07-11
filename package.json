@@ -2,22 +2,9 @@
   "name": "finsync",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
-  "scripts": {
-    "start": "expo start",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "web": "expo start --web",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "build:ios": "expo prebuild --platform ios && expo run:ios --configuration Release",
-    "build:android": "expo prebuild --platform android && expo run:android --variant release",
-    "build:web": "expo export:web",
-    "prebuild": "expo prebuild --clean"
-  },
   "dependencies": {
     "@firebase/firestore": "^4.8.0",
-    "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/netinfo": "^11.4.1",
     "@types/react": "~19.0.10",
     "dotenv": "^17.2.0",
@@ -31,6 +18,19 @@
   "devDependencies": {
     "@babel/core": "^7.25.8",
     "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "build:ios": "expo prebuild --platform ios && expo run:ios --configuration Release",
+    "build:android": "expo prebuild --platform android && expo run:android --variant release",
+    "build:web": "expo export:web",
+    "prebuild": "expo prebuild --clean"
   },
   "private": true,
   "packageManager": "npm@11.4.1+sha512.fcee43884166b6f9c5d04535fb95650e9708b6948a1f797eddf40e9778646778a518dfa32651b1c62ff36f4ac42becf177ca46ca27d53f24b539190c8d91802b"
