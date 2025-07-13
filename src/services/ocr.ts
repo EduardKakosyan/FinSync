@@ -1,4 +1,5 @@
 import { debugLogger } from '../utils/debugLogger';
+import { DEFAULT_NETWORK_CONFIG, getBestOCREndpoint, detectAvailableEndpoints, NetworkOCRConfig } from '../config/ocr';
 
 /**
  * OCR Service for processing receipt images using nanonets-ocr on LM Studio
@@ -28,7 +29,7 @@ export interface OCRResult {
 }
 
 const DEFAULT_CONFIG: OCRConfig = {
-  baseURL: 'http://localhost:1234',
+  baseURL: 'http://localhost:1234', // Will be auto-detected
   apiKey: 'lm-studio',
   model: 'nanonets/Nanonets-OCR-s',
   timeout: 30000
@@ -36,9 +37,46 @@ const DEFAULT_CONFIG: OCRConfig = {
 
 class OCRService {
   private config: OCRConfig;
+  private networkConfig: NetworkOCRConfig;
+  private detectedEndpoint: string | null = null;
+  private lastDetectionTime: number = 0;
+  private detectionCacheTime: number = 60000; // 1 minute cache
 
   constructor(config: Partial<OCRConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    this.networkConfig = DEFAULT_NETWORK_CONFIG;
+  }
+
+  /**
+   * Ensure we have a valid OCR endpoint
+   */
+  private async ensureValidEndpoint(): Promise<string> {
+    const now = Date.now();
+    
+    // Use cached endpoint if recent and valid
+    if (this.detectedEndpoint && (now - this.lastDetectionTime) < this.detectionCacheTime) {
+      return this.detectedEndpoint;
+    }
+    
+    debugLogger.log('Detecting OCR endpoint...', { 
+      lastDetection: this.lastDetectionTime,
+      cached: this.detectedEndpoint 
+    });
+    
+    // Auto-detect best available endpoint
+    const bestEndpoint = await getBestOCREndpoint(this.networkConfig);
+    
+    if (bestEndpoint) {
+      this.detectedEndpoint = bestEndpoint;
+      this.lastDetectionTime = now;
+      this.config.baseURL = bestEndpoint;
+      debugLogger.log('OCR endpoint detected', { endpoint: bestEndpoint });
+      return bestEndpoint;
+    }
+    
+    // Fallback to configured baseURL
+    debugLogger.log('Using fallback endpoint', { endpoint: this.config.baseURL });
+    return this.config.baseURL;
   }
 
   /**
@@ -50,6 +88,9 @@ class OCRService {
         imageSize: imageBase64.length,
         model: this.config.model 
       });
+
+      // Ensure we have a valid endpoint
+      await this.ensureValidEndpoint();
 
       const response = await this.callOCRAPI(imageBase64);
       
@@ -295,41 +336,46 @@ Rules:
   }
 
   /**
-   * Test OCR service connectivity
+   * Test OCR service connectivity with auto-detection
    */
-  async testConnection(): Promise<{ success: boolean; error?: string }> {
+  async testConnection(): Promise<{ success: boolean; error?: string; endpoint?: string; availableEndpoints?: string[] }> {
     try {
-      const response = await fetch(`${this.config.baseURL}/v1/models`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`
-        }
-      });
-
-      if (response.ok) {
-        const models = await response.json();
-        const hasOCRModel = models.data?.some((model: any) => 
-          model.id?.includes('ocr') || model.id?.includes('Nanonets')
-        );
-        
-        if (hasOCRModel) {
-          return { success: true };
-        } else {
-          return { 
-            success: false, 
-            error: 'OCR model not found in LM Studio. Please load nanonets/Nanonets-OCR-s model.' 
-          };
-        }
-      } else {
-        return { 
-          success: false, 
-          error: `LM Studio not accessible: ${response.status} ${response.statusText}` 
+      debugLogger.log('Testing OCR connection...');
+      
+      // Detect all available endpoints
+      const availableEndpoints = await detectAvailableEndpoints(this.networkConfig);
+      
+      if (availableEndpoints.length === 0) {
+        return {
+          success: false,
+          error: 'No OCR endpoints found. Please ensure LM Studio is running with nanonets-ocr model.',
+          availableEndpoints: []
         };
       }
+      
+      // Use the best available endpoint
+      const bestEndpoint = availableEndpoints[0];
+      this.detectedEndpoint = bestEndpoint;
+      this.config.baseURL = bestEndpoint;
+      this.lastDetectionTime = Date.now();
+      
+      debugLogger.log('OCR connection successful', { 
+        endpoint: bestEndpoint,
+        totalEndpoints: availableEndpoints.length 
+      });
+      
+      return {
+        success: true,
+        endpoint: bestEndpoint,
+        availableEndpoints
+      };
+      
     } catch (error) {
+      debugLogger.error('OCR connection test failed', error);
       return { 
         success: false, 
-        error: `Cannot connect to LM Studio: ${error.message}` 
+        error: `Connection test failed: ${error.message}`,
+        availableEndpoints: []
       };
     }
   }
@@ -339,7 +385,43 @@ Rules:
    */
   updateConfig(newConfig: Partial<OCRConfig>): void {
     this.config = { ...this.config, ...newConfig };
+    // Clear cached endpoint if baseURL changed
+    if (newConfig.baseURL) {
+      this.detectedEndpoint = null;
+      this.lastDetectionTime = 0;
+    }
     debugLogger.log('OCR config updated', this.config);
+  }
+
+  /**
+   * Update network configuration
+   */
+  updateNetworkConfig(newNetworkConfig: Partial<NetworkOCRConfig>): void {
+    this.networkConfig = { ...this.networkConfig, ...newNetworkConfig };
+    // Clear cached endpoint when network config changes
+    this.detectedEndpoint = null;
+    this.lastDetectionTime = 0;
+    debugLogger.log('OCR network config updated', this.networkConfig);
+  }
+
+  /**
+   * Get current configuration
+   */
+  getConfig(): { ocr: OCRConfig; network: NetworkOCRConfig; detected?: string } {
+    return {
+      ocr: this.config,
+      network: this.networkConfig,
+      detected: this.detectedEndpoint || undefined
+    };
+  }
+
+  /**
+   * Force re-detection of OCR endpoint
+   */
+  async refreshEndpoint(): Promise<string | null> {
+    this.detectedEndpoint = null;
+    this.lastDetectionTime = 0;
+    return await this.ensureValidEndpoint();
   }
 }
 

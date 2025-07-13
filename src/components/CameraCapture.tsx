@@ -6,13 +6,15 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  Image
+  Image,
+  Modal
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Colors, Typography } from '../constants/colors';
 import { SPACING } from '../constants/dimensions';
 import { ocrService, OCRResult } from '../services/ocr';
+import OCRSettings from './OCRSettings';
 import { debugLogger } from '../utils/debugLogger';
 
 interface CameraCaptureProps {
@@ -23,6 +25,7 @@ interface CameraCaptureProps {
 const CameraCapture: React.FC<CameraCaptureProps> = ({ onOCRResult, disabled = false }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastImageUri, setLastImageUri] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -72,6 +75,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onOCRResult, disabled = f
       // Convert image to base64
       const base64Image = await convertImageToBase64(uri);
       
+      // Test connection first, then extract transaction data
+      const connectionTest = await ocrService.testConnection();
+      if (!connectionTest.success) {
+        throw new Error(connectionTest.error || 'OCR service not available');
+      }
+
       // Extract transaction data using OCR
       const ocrResult = await ocrService.extractTransactionData(base64Image);
       
@@ -233,9 +242,27 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onOCRResult, disabled = f
         </View>
       )}
       
-      <Text style={styles.helpText}>
-        Tap to capture a receipt and automatically extract transaction details
-      </Text>
+      <View style={styles.settingsRow}>
+        <Text style={styles.helpText}>
+          Tap to capture a receipt and automatically extract transaction details
+        </Text>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => setShowSettings(true)}
+        >
+          <Text style={styles.settingsButtonText}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+      
+      {showSettings && (
+        <Modal
+          visible={showSettings}
+          animationType="slide"
+          presentationStyle="pageSheet"
+        >
+          <OCRSettings onClose={() => setShowSettings(false)} />
+        </Modal>
+      )}
     </View>
   );
 };
@@ -292,6 +319,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: SPACING.sm,
     paddingHorizontal: SPACING.md,
+    flex: 1,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: SPACING.sm,
+  },
+  settingsButton: {
+    padding: SPACING.sm,
+    borderRadius: 6,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  settingsButtonText: {
+    fontSize: 16,
   },
 });
 
