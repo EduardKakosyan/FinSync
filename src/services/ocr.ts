@@ -1,5 +1,6 @@
 import { debugLogger } from '../utils/debugLogger';
 import { DEFAULT_NETWORK_CONFIG, getBestOCREndpoint, detectAvailableEndpoints, NetworkOCRConfig } from '../config/ocr';
+import { ocrMonitor } from '../utils/ocrMonitor';
 
 /**
  * OCR Service for processing receipt images using nanonets-ocr on LM Studio
@@ -83,6 +84,9 @@ class OCRService {
    * Extract transaction data from a base64 encoded image
    */
   async extractTransactionData(imageBase64: string): Promise<OCRResult> {
+    // Start monitoring
+    ocrMonitor.startMonitoring(imageBase64.length);
+    
     try {
       debugLogger.log('OCR extraction started', { 
         imageSize: imageBase64.length,
@@ -90,19 +94,43 @@ class OCRService {
       });
 
       // Ensure we have a valid endpoint
+      ocrMonitor.updateStage('connecting', 'Detecting OCR endpoint...');
       await this.ensureValidEndpoint();
 
+      // Make API call with monitoring
+      ocrMonitor.updateStage('sending', 'Sending image to Ollama...');
+      const startTime = Date.now();
       const response = await this.callOCRAPI(imageBase64);
+      const responseTime = Date.now() - startTime;
+      
+      // Log network response
+      ocrMonitor.logNetworkResponse(response, responseTime);
       
       if (!response.ok) {
+        ocrMonitor.updateStage('error', `OCR API error: ${response.status} ${response.statusText}`, {
+          status: response.status,
+          statusText: response.statusText
+        });
         throw new Error(`OCR API error: ${response.status} ${response.statusText}`);
       }
 
+      ocrMonitor.updateStage('receiving', 'Processing Ollama response...');
       const result = await response.json();
       debugLogger.log('OCR API response received', { success: true });
 
+      // Validate Ollama response format
+      const responseValidation = ocrMonitor.validateOllamaResponse(result);
+      if (!responseValidation.isValid) {
+        ocrMonitor.addEvent('warning', 'Response format issues detected', {
+          issues: responseValidation.issues
+        });
+      }
+
       // Parse the OCR result
+      ocrMonitor.updateStage('parsing', 'Extracting transaction data...');
       const extractedData = this.parseOCRResponse(result);
+      
+      ocrMonitor.updateStage('complete', 'OCR processing completed successfully');
       
       return {
         success: true,
@@ -111,7 +139,14 @@ class OCRService {
       };
 
     } catch (error) {
+      ocrMonitor.updateStage('error', `OCR extraction failed: ${error.message}`, {
+        errorType: error.name,
+        stack: error.stack?.substring(0, 500)
+      });
+      
       debugLogger.error('OCR extraction failed', error);
+      debugLogger.error('OCR Troubleshooting Report', ocrMonitor.generateTroubleshootingReport());
+      
       return {
         success: false,
         error: error.message || 'Unknown OCR error'
@@ -170,6 +205,9 @@ Rules:
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }
 
+    // Log network request details
+    ocrMonitor.logNetworkRequest(url, payload);
+
     return fetch(url, {
       method: 'POST',
       headers,
@@ -188,31 +226,42 @@ Rules:
       if (response.message && response.message.content) {
         // Ollama format
         content = response.message.content.trim();
+        ocrMonitor.addEvent('info', 'Using Ollama response format', { 
+          hasRole: !!response.message.role,
+          contentLength: content.length 
+        });
       } else if (response.choices && response.choices[0] && response.choices[0].message) {
         // OpenAI-compatible format
         content = response.choices[0].message.content.trim();
+        ocrMonitor.addEvent('info', 'Using OpenAI-compatible response format', { 
+          choicesCount: response.choices.length,
+          contentLength: content.length 
+        });
       } else {
-        throw new Error('Invalid OCR response format');
+        throw new Error('Invalid OCR response format - missing both message.content and choices[0].message.content');
       }
 
       debugLogger.log('OCR response content', { content });
 
-      // Try to parse JSON from the response
-      let parsedData;
-      try {
-        parsedData = JSON.parse(content);
-      } catch {
-        // If direct parsing fails, try to extract JSON from the response
-        const jsonMatch = content.match(/\{[^}]*\}/);
-        if (jsonMatch) {
-          parsedData = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('No valid JSON found in OCR response');
-        }
+      // Validate and extract JSON using the monitor
+      const jsonValidation = ocrMonitor.validateJSONExtraction(content);
+      
+      if (!jsonValidation.isValid) {
+        ocrMonitor.addEvent('error', 'JSON extraction failed', {
+          issues: jsonValidation.issues,
+          rawContent: content.substring(0, 500)
+        });
+        throw new Error(`JSON parsing failed: ${jsonValidation.issues.join(', ')}`);
       }
 
+      const parsedData = jsonValidation.extractedJSON;
+      ocrMonitor.addEvent('success', 'Successfully parsed JSON from response', {
+        extractedFields: Object.keys(parsedData),
+        fieldCount: Object.keys(parsedData).length
+      });
+
       // Validate and clean the parsed data
-      return {
+      const cleanedData = {
         amount: this.parseAmount(parsedData.amount),
         date: this.parseDate(parsedData.date),
         description: this.parseString(parsedData.description),
@@ -220,7 +269,21 @@ Rules:
         merchant: this.parseString(parsedData.merchant)
       };
 
+      // Log field validation results
+      const validFields = Object.entries(cleanedData).filter(([_, value]) => value !== undefined);
+      ocrMonitor.addEvent('info', 'Field validation completed', {
+        validFields: validFields.length,
+        totalFields: Object.keys(cleanedData).length,
+        validFieldNames: validFields.map(([key]) => key)
+      });
+
+      return cleanedData;
+
     } catch (error) {
+      ocrMonitor.addEvent('error', 'Response parsing failed', {
+        errorMessage: error.message,
+        responseKeys: response ? Object.keys(response) : 'null response'
+      });
       debugLogger.error('Failed to parse OCR response', error);
       return {};
     }
