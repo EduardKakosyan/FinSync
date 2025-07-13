@@ -11,8 +11,10 @@ import {
   Alert,
 } from 'react-native';
 import { Colors, Typography } from '../constants/colors';
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES } from '../types';
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, OCRResult } from '../types';
 import { addTransaction } from '../services/firebase';
+import CameraCapture from './CameraCapture';
+import { debugLogger } from '../utils/debugLogger';
 
 interface TransactionFormProps {
   onSuccess?: () => void;
@@ -24,8 +26,58 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFromOCR, setIsFromOCR] = useState(false);
+  const [ocrConfidence, setOcrConfidence] = useState<number | null>(null);
 
   const categories = type === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES;
+
+  const handleOCRResult = (result: OCRResult) => {
+    debugLogger.log('OCR result received in form', result);
+    
+    if (result.success && result.data) {
+      const { amount: ocrAmount, description: ocrDescription, category: ocrCategory, merchant } = result.data;
+      
+      // Auto-fill form fields with OCR data
+      if (ocrAmount) {
+        setAmount(ocrAmount.toString());
+      }
+      
+      if (ocrDescription || merchant) {
+        const desc = ocrDescription || merchant || '';
+        setDescription(desc);
+      }
+      
+      if (ocrCategory) {
+        // Find matching category
+        const matchingCategory = categories.find(cat => cat.id === ocrCategory);
+        if (matchingCategory) {
+          setSelectedCategory(ocrCategory);
+        } else {
+          // If no exact match, try 'other' or first category
+          setSelectedCategory('other');
+        }
+      }
+      
+      // Mark as OCR-filled and store confidence
+      setIsFromOCR(true);
+      setOcrConfidence(result.confidence || null);
+      
+      debugLogger.log('Form auto-filled from OCR', {
+        amount: ocrAmount,
+        description: ocrDescription || merchant,
+        category: ocrCategory,
+        confidence: result.confidence
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setAmount('');
+    setDescription('');
+    setSelectedCategory('');
+    setIsFromOCR(false);
+    setOcrConfidence(null);
+  };
 
   const handleSubmit = async () => {
     if (!amount || !selectedCategory) {
@@ -50,9 +102,7 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
       });
 
       // Reset form
-      setAmount('');
-      setDescription('');
-      setSelectedCategory('');
+      resetForm();
       
       Alert.alert('Success', 'Transaction added successfully');
       onSuccess?.();
@@ -70,6 +120,24 @@ export default function TransactionForm({ onSuccess }: TransactionFormProps) {
       style={styles.container}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* OCR Camera Capture */}
+        <CameraCapture 
+          onOCRResult={handleOCRResult}
+          disabled={isSubmitting}
+        />
+        
+        {/* OCR Confidence Indicator */}
+        {isFromOCR && ocrConfidence !== null && (
+          <View style={styles.ocrIndicator}>
+            <Text style={styles.ocrIndicatorText}>
+              📷 Auto-filled from receipt ({ocrConfidence}% confidence)
+            </Text>
+            <TouchableOpacity onPress={resetForm}>
+              <Text style={styles.ocrClearText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.typeSelector}>
           <TouchableOpacity
             style={[
@@ -263,5 +331,25 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.semibold,
     color: Colors.text.inverse,
+  },
+  ocrIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  ocrIndicatorText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.inverse,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  ocrClearText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.inverse,
+    textDecorationLine: 'underline',
   },
 });

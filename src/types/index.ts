@@ -41,3 +41,16 @@ export const DEFAULT_INCOME_CATEGORIES: IncomeCategory[] = [
 ];
 
 export type TransactionPeriod = 'daily' | 'weekly' | 'monthly';
+
+export interface OCRResult {
+  success: boolean;
+  data?: {
+    amount?: number;
+    date?: string;
+    description?: string;
+    category?: string;
+    merchant?: string;
+  };
+  error?: string;
+  confidence?: number;
+}
