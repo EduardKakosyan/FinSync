@@ -29,9 +29,9 @@ export interface OCRResult {
 }
 
 const DEFAULT_CONFIG: OCRConfig = {
-  baseURL: 'http://localhost:1234', // Will be auto-detected
-  apiKey: 'lm-studio',
-  model: 'nanonets/Nanonets-OCR-s',
+  baseURL: 'http://localhost:11434', // Will be auto-detected (Ollama default)
+  apiKey: '', // Ollama doesn't require API key
+  model: 'benhaotang/Nanonets-OCR-s:latest',
   timeout: 30000
 };
 
@@ -120,10 +120,10 @@ class OCRService {
   }
 
   /**
-   * Make API call to LM Studio nanonets-ocr endpoint
+   * Make API call to Ollama nanonets-ocr endpoint
    */
   private async callOCRAPI(imageBase64: string): Promise<Response> {
-    const url = `${this.config.baseURL}/v1/chat/completions`;
+    const url = `${this.config.baseURL}/api/chat`;
     
     const systemPrompt = `You are an expert receipt OCR system. Extract transaction information from receipt images and return ONLY a valid JSON object with the following structure:
 {
@@ -150,44 +150,51 @@ Rules:
         },
         {
           role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: 'Extract transaction details from this receipt image'
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`
-              }
-            }
-          ]
+          content: 'Extract transaction details from this receipt image',
+          images: [imageBase64.startsWith('data:') ? imageBase64.split(',')[1] : imageBase64]
         }
       ],
-      temperature: 0.1,
-      max_tokens: 500
+      stream: false,
+      options: {
+        temperature: 0.1,
+        num_predict: 500
+      }
     };
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+
+    // Only add authorization header if API key is provided
+    if (this.config.apiKey) {
+      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+    }
 
     return fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`
-      },
+      headers,
       body: JSON.stringify(payload)
     });
   }
 
   /**
-   * Parse the OCR API response and extract transaction data
+   * Parse the Ollama OCR API response and extract transaction data
    */
   private parseOCRResponse(response: any): OCRResult['data'] {
     try {
-      if (!response.choices || !response.choices[0] || !response.choices[0].message) {
+      // Handle both Ollama and OpenAI-compatible response formats
+      let content: string;
+      
+      if (response.message && response.message.content) {
+        // Ollama format
+        content = response.message.content.trim();
+      } else if (response.choices && response.choices[0] && response.choices[0].message) {
+        // OpenAI-compatible format
+        content = response.choices[0].message.content.trim();
+      } else {
         throw new Error('Invalid OCR response format');
       }
 
-      const content = response.choices[0].message.content.trim();
       debugLogger.log('OCR response content', { content });
 
       // Try to parse JSON from the response

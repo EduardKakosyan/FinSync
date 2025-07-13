@@ -30,7 +30,7 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({ onClose }) => {
   } | null>(null);
   
   const [laptopIP, setLaptopIP] = useState('192.168.4.48');
-  const [port, setPort] = useState('1234');
+  const [port, setPort] = useState('11434'); // Ollama default port
   const [autoDetect, setAutoDetect] = useState(true);
   const [customEndpoint, setCustomEndpoint] = useState('');
 
@@ -97,8 +97,20 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({ onClose }) => {
   const showSetupGuide = () => {
     const instructions = NETWORK_SETUP_INSTRUCTIONS;
     Alert.alert(
-      'LM Studio Setup Guide',
-      `${instructions.lmStudio.steps.join('\n')}\n\n${instructions.troubleshooting.tips.join('\n')}`,
+      'Ollama Setup Guide',
+      `${instructions.ollama.steps.join('\n')}\n\nTroubleshooting:\n${instructions.troubleshooting.tips.join('\n')}`,
+      [
+        { text: 'Show LM Studio Alternative', onPress: showLMStudioGuide },
+        { text: 'Got it' }
+      ]
+    );
+  };
+
+  const showLMStudioGuide = () => {
+    const instructions = NETWORK_SETUP_INSTRUCTIONS;
+    Alert.alert(
+      'LM Studio Setup Guide (Alternative)',
+      instructions.lmStudio.steps.join('\n'),
       [{ text: 'Got it' }]
     );
   };
@@ -219,17 +231,17 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({ onClose }) => {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>LM Studio Port</Text>
+          <Text style={styles.label}>Ollama Port</Text>
           <TextInput
             style={styles.input}
             value={port}
             onChangeText={setPort}
-            placeholder="1234"
+            placeholder="11434"
             placeholderTextColor={Colors.text.light}
             keyboardType="numeric"
           />
           <Text style={styles.helpText}>
-            LM Studio server port (default: 1234)
+            Ollama server port (default: 11434)
           </Text>
         </View>
       </View>
@@ -242,7 +254,7 @@ const OCRSettings: React.FC<OCRSettingsProps> = ({ onClose }) => {
             style={styles.input}
             value={customEndpoint}
             onChangeText={setCustomEndpoint}
-            placeholder="http://192.168.1.100:1234"
+            placeholder="http://192.168.1.100:11434"
             placeholderTextColor={Colors.text.light}
             autoCapitalize="none"
             autoCorrect={false}

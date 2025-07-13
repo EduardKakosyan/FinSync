@@ -23,21 +23,21 @@ export interface NetworkOCRConfig {
   networkRange: string;
 }
 
-// Default configuration for your setup
+// Default configuration for Ollama setup
 export const DEFAULT_NETWORK_CONFIG: NetworkOCRConfig = {
   // Your laptop's current IP - update this if it changes
   laptopIP: '192.168.4.48',
   
-  port: 1234,
+  port: 11434, // Ollama default port
   
   // Multiple endpoints to try (laptop IP, localhost for development, common router IPs)
   fallbackEndpoints: [
-    'http://192.168.4.48:1234',  // Your current laptop IP
-    'http://localhost:1234',      // Local development
-    'http://127.0.0.1:1234',     // Local fallback
-    'http://192.168.1.1:1234',   // Common router IP range
-    'http://192.168.0.1:1234',   // Another common range
-    'http://10.0.0.1:1234'       // Another common range
+    'http://192.168.4.48:11434',  // Your current laptop IP with Ollama port
+    'http://localhost:11434',      // Local development
+    'http://127.0.0.1:11434',     // Local fallback
+    'http://192.168.1.1:11434',   // Common router IP range
+    'http://192.168.0.1:11434',   // Another common range
+    'http://10.0.0.1:11434'       // Another common range
   ],
   
   timeout: 10000, // 10 seconds timeout
@@ -78,30 +78,52 @@ export const detectAvailableEndpoints = async (config: NetworkOCRConfig): Promis
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout per endpoint
       
-      const response = await fetch(`${endpoint}/v1/models`, {
+      // Try Ollama API first
+      let response = await fetch(`${endpoint}/api/tags`, {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer lm-studio',
           'Content-Type': 'application/json'
         },
         signal: controller.signal
       });
       
-      clearTimeout(timeoutId);
+      let isOllama = false;
+      let hasOCRModel = false;
       
       if (response.ok) {
+        isOllama = true;
         const models = await response.json();
-        const hasOCRModel = models.data?.some((model: any) => 
-          model.id?.toLowerCase().includes('ocr') || 
-          model.id?.toLowerCase().includes('nanonets')
+        hasOCRModel = models.models?.some((model: any) => 
+          model.name?.toLowerCase().includes('ocr') || 
+          model.name?.toLowerCase().includes('nanonets')
         );
+      } else {
+        // Try LM Studio/OpenAI-compatible API
+        response = await fetch(`${endpoint}/v1/models`, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer lm-studio',
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
         
-        if (hasOCRModel) {
-          console.log(`✅ Found OCR model at: ${endpoint}`);
-          availableEndpoints.push(endpoint);
-        } else {
-          console.log(`⚠️ No OCR model found at: ${endpoint}`);
+        if (response.ok) {
+          const models = await response.json();
+          hasOCRModel = models.data?.some((model: any) => 
+            model.id?.toLowerCase().includes('ocr') || 
+            model.id?.toLowerCase().includes('nanonets')
+          );
         }
+      }
+      
+      clearTimeout(timeoutId);
+      
+      if (hasOCRModel) {
+        console.log(`✅ Found OCR model at: ${endpoint} (${isOllama ? 'Ollama' : 'LM Studio'})`);
+        availableEndpoints.push(endpoint);
+      } else if (response.ok) {
+        console.log(`⚠️ No OCR model found at: ${endpoint} (${isOllama ? 'Ollama' : 'LM Studio'})`);
       }
     } catch (error) {
       console.log(`❌ Failed to connect to: ${endpoint}`);
@@ -134,8 +156,20 @@ export const getBestOCREndpoint = async (config: NetworkOCRConfig): Promise<stri
  * Network setup instructions for LM Studio
  */
 export const NETWORK_SETUP_INSTRUCTIONS = {
+  ollama: {
+    title: "Ollama Network Setup",
+    steps: [
+      "1. Install the nanonets OCR model: ollama pull benhaotang/Nanonets-OCR-s",
+      "2. Set environment variable: export OLLAMA_HOST=0.0.0.0:11434",
+      "3. Start Ollama: ollama serve",
+      "4. Verify model is available: ollama list",
+      "5. Test network access: curl http://your-ip:11434/api/tags",
+      "6. Ensure your laptop firewall allows port 11434",
+      "7. Your laptop and phone must be on the same WiFi network"
+    ]
+  },
   lmStudio: {
-    title: "LM Studio Network Setup",
+    title: "LM Studio Network Setup (Alternative)",
     steps: [
       "1. Open LM Studio on your laptop",
       "2. Load the 'nanonets/Nanonets-OCR-s' model",
